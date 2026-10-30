@@ -1,0 +1,6 @@
+{
+  "extends": ["@lorenzh/pulse-config/biome.json"],
+  "files": {
+    "includes": ["!**/.build", "!**/.cache", "!**/.repos", "!**/src/styles/tokens.css"]
+  }
+}

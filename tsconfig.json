@@ -1,0 +1,9 @@
+{
+  "extends": "@lorenzh/pulse-config/tsconfig.base.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "lib": ["esnext", "dom"],
+    "types": ["node"]
+  },
+  "include": ["src", "scripts", "site.config.ts"]
+}

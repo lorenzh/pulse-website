@@ -1,0 +1,77 @@
+{
+  "checks": [
+    {
+      "id": "example",
+      "name": "Example endpoint",
+      "url": "http://localhost:9000/",
+      "intervalMs": 10000,
+      "timeoutMs": 1000,
+      "latencyObjectiveMs": 500,
+      "keyword": "ok",
+      "retries": 2,
+      "retryDelayMs": 500
+    },
+    {
+      "id": "example-api",
+      "name": "Example JSON api",
+      "url": "https://api.example.com/health",
+      "intervalMs": 30000,
+      "timeoutMs": 2000,
+      "method": "POST",
+      "headers": {
+        "Authorization": {
+          "env": "EXAMPLE_API_TOKEN"
+        },
+        "Content-Type": "application/json"
+      },
+      "body": "{\"ping\":true}",
+      "expectedStatus": [200, "300-399"],
+      "jsonAssert": [
+        {
+          "pointer": "/status",
+          "equals": "ok"
+        }
+      ]
+    },
+    {
+      "id": "example-cert",
+      "name": "Example certificate",
+      "type": "tls",
+      "host": "example.com",
+      "port": 443,
+      "warnDays": 14,
+      "intervalMs": 3600000
+    },
+    {
+      "id": "nightly-backup",
+      "name": "Nightly backup",
+      "type": "heartbeat",
+      "period": 86400000,
+      "grace": 3600000,
+      "secret": "replace-with-a-random-secret"
+    }
+  ],
+  "maintenance": [
+    {
+      "checkId": "example",
+      "start": "2030-01-01T02:00:00Z",
+      "end": "2030-01-01T04:00:00Z",
+      "note": "Planned database upgrade"
+    }
+  ],
+  "components": [
+    {
+      "id": "example",
+      "name": "Example service",
+      "description": "The public endpoint and its JSON api.",
+      "group": "Services",
+      "checkIds": ["example", "example-api"]
+    },
+    {
+      "id": "backend",
+      "name": "Backend",
+      "group": "Services",
+      "checkIds": ["example-api", "example-cert", "nightly-backup"]
+    }
+  ]
+}

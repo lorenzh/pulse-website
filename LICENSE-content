@@ -1,0 +1,19 @@
+Creative Commons Attribution 4.0 International (CC BY 4.0)
+
+The hand-written content of this repository (the text and illustrations of the home page, the
+hosted page and the 404 page, kept in src/content/) is licensed under CC BY 4.0.
+
+Full licence text: https://creativecommons.org/licenses/by/4.0/legalcode
+Summary: https://creativecommons.org/licenses/by/4.0/
+
+You may share and adapt the content for any purpose, even commercially, if you give appropriate
+credit, link to the licence and say if you made changes.
+
+Not covered by this licence (all rights reserved):
+- The names "pulse" and "losoft" and their logos.
+
+Other parts of this repository:
+- Code (build, components, scripts, styles): MIT, see LICENSE.
+- Generated documentation pages: MIT, as in their source repositories; each page names its source
+  file and repository.
+- Fonts (@fontsource-variable packages): SIL Open Font License 1.1.

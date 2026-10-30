@@ -1,0 +1,77 @@
+import assert from "node:assert/strict";
+import { test } from "node:test";
+import { checkLinks, pageUrl } from "./links-check.ts";
+
+const page = (body: string, head = "") =>
+  `<!doctype html><html><head>${head}</head><body>${body}</body></html>`;
+
+function run(
+  pages: Record<string, string>,
+  files: string[] = [],
+  css: Record<string, string> = {},
+) {
+  return checkLinks(
+    new Map(Object.entries(pages)),
+    (f) => files.includes(f),
+    (f) => css[f],
+  );
+}
+
+test("page URLs", () => {
+  assert.equal(pageUrl("index.html"), "/index.html".replace("index.html", ""));
+  assert.equal(pageUrl("docs/api/index.html"), "/docs/api/");
+  assert.equal(pageUrl("404.html"), "/404.html");
+});
+
+test("valid internal links, fragments and counted GitHub links pass", () => {
+  const report = run({
+    "index.html": page(
+      '<a href="/hosted/#plans">h</a><a href="/docs/">d</a><a href="https://github.com/lorenzh/x">g</a><a href="#top">t</a>',
+    ),
+    "hosted/index.html": page('<h2 id="plans">P</h2>'),
+    "docs/index.html": page("<p>docs</p>"),
+  });
+  assert.deepEqual(report.problems, []);
+  assert.equal(report.githubLinks, 1);
+  assert.equal(report.internalLinks, 3);
+});
+
+test("a dangling link and a missing fragment fail", () => {
+  const report = run({
+    "index.html": page('<a href="/nope/">x</a><a href="/hosted/#gone">y</a>'),
+    "hosted/index.html": page('<h2 id="plans">P</h2>'),
+  });
+  assert.equal(report.problems.length, 2);
+  assert.match(report.problems.join("\n"), /\/nope\/.*does not resolve/);
+  assert.match(report.problems.join("\n"), /no element with id "gone"/);
+});
+
+test("references to another origin fail (failing fixture)", () => {
+  const report = run({
+    "index.html": page(
+      '<img src="https://cdn.test/a.png"><script src="//x.test/a.js"></script><form action="https://x.test/send"></form><a href="https://example.com/ok">ok</a>',
+      '<link rel="stylesheet" href="https://fonts.test/a.css"><link rel="canonical" href="https://pulse.example/">',
+    ),
+  });
+  assert.equal(report.problems.length, 4);
+  assert.equal(report.externalLinks, 2);
+});
+
+test("CSS @import and url() to another origin fail; missing local font fails", () => {
+  const report = run(
+    { "index.html": page("<p>x</p>", '<link rel="stylesheet" href="/assets/site.css">') },
+    ["assets/site.css", "assets/fonts/a.woff2"],
+    {
+      "assets/site.css":
+        '@import "https://x.test/a.css";@font-face{src:url(/assets/fonts/a.woff2)}@font-face{src:url(/assets/fonts/missing.woff2)}.a{background:url(https://x.test/b.png)}',
+    },
+  );
+  assert.equal(report.problems.length, 3);
+});
+
+test("inline style url() to another origin fails", () => {
+  const report = run({
+    "index.html": page('<div style="background:url(https://x.test/a.png)"></div>'),
+  });
+  assert.equal(report.problems.length, 1);
+});
