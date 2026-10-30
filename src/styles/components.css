@@ -715,8 +715,9 @@ pre.code:focus-visible {
   right: 0.5rem;
   z-index: 1;
 }
+/* The pre stops left of the button, so no scroll position puts text under it. */
 .js .code-block.has-copy pre.code {
-  padding-right: calc(var(--touch) + 1rem);
+  margin-right: calc(var(--touch) + 0.5rem);
 }
 .copy-btn {
   display: inline-flex;

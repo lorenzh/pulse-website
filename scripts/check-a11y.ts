@@ -545,6 +545,62 @@ async function checkOneCopyButton(
   if (((await tip.textContent()) ?? "") !== "") fail(where, "tooltip does not reset after 1.5 s");
 }
 
+/** Scrolls a code block's pre to its start or end; returns the text that lies under the copy button. */
+function textUnderButton(block: Element, end: boolean): string[] {
+  const pre = block.querySelector<HTMLElement>("pre.code");
+  const btn = block.querySelector(".copy-btn")?.getBoundingClientRect();
+  if (!pre || !btn) return ["no pre or copy button"];
+  pre.scrollLeft = end ? pre.scrollWidth : 0;
+  const clip = pre.getBoundingClientRect();
+  const out: string[] = [];
+  const walker = document.createTreeWalker(pre, NodeFilter.SHOW_TEXT);
+  for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+    const text = (n.textContent ?? "").replace(/\s+/g, " ");
+    if (!text.trim()) continue;
+    const range = document.createRange();
+    range.selectNodeContents(n);
+    // Only the part inside the pre is painted; the rest is scrolled away.
+    const under = [...range.getClientRects()].some(
+      (r) =>
+        Math.min(r.right, clip.right, btn.right) - Math.max(r.left, clip.left, btn.left) > 0.5 &&
+        Math.min(r.bottom, clip.bottom, btn.bottom) - Math.max(r.top, clip.top, btn.top) > 0.5,
+    );
+    if (under) out.push(text.slice(0, 20));
+  }
+  pre.scrollLeft = 0;
+  return out;
+}
+
+/** Checks every command block of the open page at its scroll start and end; returns the block count. */
+async function checkCopyClearanceOnPage(page: Page, where: string): Promise<number> {
+  const blocks = page.locator(".code-block:has(.copy-btn)");
+  const count = await blocks.count();
+  for (let i = 0; i < count; i++) {
+    for (const end of [false, true]) {
+      const hits = await blocks.nth(i).evaluate(textUnderButton, end);
+      const at = `block ${i} ${end ? "end" : "start"}`;
+      for (const h of hits) fail(where, `text under copy button, ${at}: "${h}"`);
+    }
+  }
+  return count;
+}
+
+/** At the scroll start and end of every command block, no text glyph lies under its copy button. */
+async function checkCopyClearance(browser: Browser): Promise<void> {
+  for (const width of [390, 1280]) {
+    const context = await newContext(browser, { width, theme: "light" });
+    const page = await context.newPage();
+    let checked = 0;
+    for (const url of urls) {
+      await page.goto(`${origin}${url}`);
+      await page.locator("main").waitFor();
+      checked += await checkCopyClearanceOnPage(page, `copy clearance ${width}px ${url}`);
+    }
+    if (checked === 0) fail(`copy clearance ${width}px`, "no code block with a copy button");
+    await context.close();
+  }
+}
+
 async function checkCopyButtons(browser: Browser): Promise<void> {
   const where = "copy buttons";
   for (const mode of ["allow", "block"] as const) {
@@ -608,6 +664,7 @@ try {
   await checkNoScript(browser);
   await checkHoverCss();
   await checkCopyButtons(browser);
+  await checkCopyClearance(browser);
   for (const theme of THEMES) await checkMotionPages(browser, theme);
 } finally {
   await browser.close();
