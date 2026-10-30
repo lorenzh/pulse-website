@@ -4,19 +4,19 @@ The static website of [pulse](https://github.com/lorenzh/pulse-meta): a home pag
 
 ## Commands
 
-Node 24 or newer.
+Bun 1.4.0 (package manager, runtime and test runner).
 
-| Task                                                   | Command                                          |
-| ------------------------------------------------------ | ------------------------------------------------ |
-| Install                                                | `npm ci`                                         |
-| Lint, typecheck, unit tests (80 % line coverage)       | `npm run check`                                  |
-| Build `dist/`                                          | `npm run build`                                  |
-| Build, then links, budget and accessibility checks     | `npm run check:site`                             |
-| All checks (the pull request is done when this passes) | `npm run check:all`                              |
-| Pin the docs to `main` of every repo / of one repo     | `npm run docs:bump` / `npm run docs:bump -- api` |
-| Regenerate the token CSS                               | `npm run tokens`                                 |
+| Task                                                   | Command                                       |
+| ------------------------------------------------------ | --------------------------------------------- |
+| Install                                                | `bun install --frozen-lockfile`               |
+| Lint, typecheck, unit tests (80 % line coverage)       | `bun run check`                               |
+| Build `dist/`                                          | `bun run build`                               |
+| Build, then links, budget and accessibility checks     | `bun run check:site`                          |
+| All checks (the pull request is done when this passes) | `bun run check:all`                           |
+| Pin the docs to `main` of every repo / of one repo     | `bun run docs:bump` / `bun run docs:bump api` |
+| Regenerate the token CSS                               | `bun run tokens`                              |
 
-`check:a11y` needs Chromium: `npx playwright install --with-deps chromium`.
+`check:a11y` needs Chromium: `bunx playwright install --with-deps chromium`.
 
 ## Layout
 
@@ -40,7 +40,7 @@ The server render uses real React (`renderToStaticMarkup`); `react` is aliased t
 
 `docs.config.json` holds, for each of the six repos (`api`, `probe`, `status`, `notify`, `contract`, `kit`), the repository, a 40-character commit SHA, its commit date and the list of published files (`docs/*.md` and `docs/channels/*.md`). It is the only place with SHAs. The build fetches `https://raw.githubusercontent.com/<repo>/<sha>/<path>`, caches it in `.cache/docs/` (ignored) and fails on a non-200 answer, a bad SHA or an empty file. The README of a repo is not published.
 
-To update: `npm run docs:bump`, review the diff (a new upstream file shows up as a new line), run `npm run check:all`, merge. The build fails on a dangling link anchor and when a published file is not in the navigation (`src/docs/nav.ts`, which maps each sidebar entry to a file). Never edit a generated page by hand; change the source repository.
+To update: `bun run docs:bump`, review the diff (a new upstream file shows up as a new line), run `bun run check:all`, merge. The build fails on a dangling link anchor and when a published file is not in the navigation (`src/docs/nav.ts`, which maps each sidebar entry to a file). Never edit a generated page by hand; change the source repository.
 
 URLs: `/docs/<repo>/<page>/` (`index.md` is `/docs/<repo>/`), `/docs/notify/channels/<name>/`, `/docs/api/rest-api/`. `/docs/` shows the quick start (same content as `/docs/api/install/`, with that page as its canonical link).
 

@@ -14,7 +14,7 @@ concurrency:
 
 jobs:
   check:
-    uses: lorenzh/pulse-config/.github/workflows/check.yml@8bdf9171917f115195095df93b8d90d23e90e9ac
+    uses: lorenzh/pulse-config/.github/workflows/check.yml@86896e9ff02e6458e431aa3417ee81d3b1cbc335
 
   site:
     runs-on: ubuntu-24.04
@@ -23,14 +23,13 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/setup-node@v6
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
-          node-version: 24
-          cache: npm
-      - run: npm ci
-      - run: npx playwright install --with-deps chromium
+          bun-version: 1.4.0
+      - run: bun install --frozen-lockfile
+      - run: bunx playwright install --with-deps chromium
       # The build fetches the docs at the SHAs of docs.config.json from raw.githubusercontent.com.
-      - run: npm run build
-      - run: npm run check:links
-      - run: npm run check:budget
-      - run: npm run check:a11y
+      - run: bun run build
+      - run: bun run check:links
+      - run: bun run check:budget
+      - run: bun run check:a11y

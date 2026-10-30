@@ -1,6 +1,6 @@
+import { test } from "bun:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { test } from "node:test";
 import { generateTokensCss, type Tokens } from "./tokens-css.ts";
 
 const json = readFileSync("design/losoft-tokens.json", "utf8");
@@ -8,7 +8,7 @@ const tokens = JSON.parse(json) as Tokens;
 
 test("the committed tokens.css matches the design JSON", () => {
   const css = readFileSync("src/styles/tokens.css", "utf8");
-  assert.equal(css, generateTokensCss(tokens), "run npm run tokens");
+  assert.equal(css, generateTokensCss(tokens), "run bun run tokens");
 });
 
 test("every colour token is defined in light and dark", () => {

@@ -4,23 +4,23 @@ Instructions for coding agents in this repository. They bind every change.
 
 ## Project
 
-pulse-website is the static website of pulse: a home page, docs generated from the `docs/*.md` of the pulse repositories at pinned commits, the REST API reference, and a hosted-plans page whose commercial facts are placeholders. Work arrives as an issue with an approved spec from the meta repository; implement only the section for this repository. Node 24+ with native type stripping for `.ts`, ESM, npm, strict TypeScript (`tsc --noEmit`), `node:test`, Biome, ESLint (SonarJS), Lefthook. Pages are TSX, rendered at build time with React (`renderToStaticMarkup`); only the Preact islands in `src/islands` run in the browser.
+pulse-website is the static website of pulse: a home page, docs generated from the `docs/*.md` of the pulse repositories at pinned commits, the REST API reference, and a hosted-plans page whose commercial facts are placeholders. Work arrives as an issue with an approved spec from the meta repository; implement only the section for this repository. Bun 1.4.0 (package manager, runtime, `bun:test`), ESM, strict TypeScript (`tsc --noEmit`), Biome, ESLint (SonarJS), Lefthook. Pages are TSX, rendered at build time with React (`renderToStaticMarkup`); only the Preact islands in `src/islands` run in the browser.
 
 ## Commands
 
-| Task                                                          | Command                                       |
-| ------------------------------------------------------------- | --------------------------------------------- |
-| Install from the lockfile (also installs the pre-commit hook) | `npm ci`                                      |
-| Lint, typecheck, unit tests (CI job `check`)                  | `npm run check`                               |
-| Build, links, budget, a11y (CI job `site`)                    | `npm run check:site`                          |
-| Everything                                                    | `npm run check:all`                           |
-| Build `dist/` (fetches the pinned docs)                       | `npm run build`                               |
-| Pin the docs to the current `main` of each repo               | `npm run docs:bump [-- <repo>]`               |
-| Regenerate `src/styles/tokens.css`                            | `npm run tokens`                              |
-| One test file                                                 | `node --test src/<dir>/<name>.test.ts`        |
-| Lint and format check / apply fixes                           | `npm run lint` / `npm run format`             |
-| Browser for `check:a11y` (once)                               | `npx playwright install --with-deps chromium` |
-- A change is done when `npm run check:all` passes. Never run `git commit --no-verify`, and never weaken `biome.json`, `tsconfig.json`, the ESLint config, `budget.json` or CI to pass. A budget changes only with a stated reason in the pull request.
+| Task                                                          | Command                                        |
+| ------------------------------------------------------------- | ---------------------------------------------- |
+| Install from the lockfile (also installs the pre-commit hook) | `bun install --frozen-lockfile`                |
+| Lint, typecheck, unit tests (CI job `check`)                  | `bun run check`                                |
+| Build, links, budget, a11y (CI job `site`)                    | `bun run check:site`                           |
+| Everything                                                    | `bun run check:all`                            |
+| Build `dist/` (fetches the pinned docs)                       | `bun run build`                                |
+| Pin the docs to the current `main` of each repo               | `bun run docs:bump [<repo>]`                   |
+| Regenerate `src/styles/tokens.css`                            | `bun run tokens`                               |
+| One test file                                                 | `bun test src/<dir>/<name>.test.ts`            |
+| Lint and format check / apply fixes                           | `bun run lint` / `bun run format`              |
+| Browser for `check:a11y` (once)                               | `bunx playwright install --with-deps chromium` |
+- A change is done when `bun run check:all` passes. Never run `git commit --no-verify`, and never weaken `biome.json`, `tsconfig.json`, the ESLint config, `budget.json` or CI to pass. A budget changes only with a stated reason in the pull request.
 
 ## Repository boundaries
 
@@ -28,14 +28,14 @@ pulse-website is the static website of pulse: a home page, docs generated from t
 - Do not add `.factory/`, plan, or note files to this repository.
 - Never edit generated or fetched docs by hand; change the source repo, then bump the pin.
 - Product facts only from the sources in `src/content/facts.ts`. Each constant names its source file; a test checks what a machine can check against `test/fixtures/`. Where the design and the code differ, the code wins.
-- The SHAs of the docs live only in `docs.config.json`, written by `npm run docs:bump`. The build reads nothing else and fetches only those SHAs.
+- The SHAs of the docs live only in `docs.config.json`, written by `bun run docs:bump`. The build reads nothing else and fetches only those SHAs.
 - Prices, regions, trial terms, availability, data location, open-source terms and the status URL of the hosted offer are placeholders (`<mark class="placeholder">[PRICE]</mark>`). Do not invent them. The waitlist form stays disabled and has no `action`.
 - No request to another origin at run time: no CDN, analytics, tracking or web fonts from elsewhere.
 - Runtime dependencies only if the package is on the approved-packages list in pulse-meta. Pin every dependency exactly.
 
 ## TypeScript
 
-- Scripts and logic run unbuilt under Node type stripping: erasable syntax only (no `enum`, `namespace`, parameter properties). TSX is compiled by esbuild (`src/build/load-site.ts`, `src/build/assets.ts`); keep logic in `.ts` files so tests can import it.
+- Scripts and logic run unbuilt under Bun; keep to erasable syntax as a style rule (no `enum`, `namespace`, parameter properties). TSX is compiled by esbuild (`src/build/load-site.ts`, `src/build/assets.ts`); keep logic in `.ts` files so tests can import it.
 - Relative imports carry the `.ts` or `.tsx` extension. Built-ins use the `node:` prefix.
 - Type-only imports use `import type`.
 - No `any`. No non-null `!` in `src/`. Use `as` only right after a check at a trust boundary.
@@ -54,7 +54,7 @@ pulse-website is the static website of pulse: a home page, docs generated from t
 
 - Red, green, refactor. A bug fix starts with a test that reproduces it.
 - Tests sit next to the code as `*.test.ts`. No real clock, no external network (a fake `fetch` is passed in), each test writes only to its own `mkdtemp` directory.
-- `npm test` enforces 80 % line coverage. The browser checks (`check:a11y`) are separate and not part of the gate.
+- `bun test` enforces 80 % line coverage. The browser checks (`check:a11y`) are separate and not part of the gate.
 
 ## Documentation and licences
 

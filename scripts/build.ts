@@ -1,4 +1,4 @@
-// npm run build: fetches the pinned docs, renders every page into dist/.
+// bun run build: fetches the pinned docs, renders every page into dist/.
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { buildIslands, buildStatic } from "../src/build/assets.ts";

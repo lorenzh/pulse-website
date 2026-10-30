@@ -3,7 +3,7 @@
   "compilerOptions": {
     "jsx": "react-jsx",
     "lib": ["esnext", "dom"],
-    "types": ["node"]
+    "types": ["bun", "node"]
   },
   "include": ["src", "scripts", "site.config.ts"]
 }

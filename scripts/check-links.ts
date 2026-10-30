@@ -1,4 +1,4 @@
-// npm run check:links: offline link and external-request check over dist/.
+// bun run check:links: offline link and external-request check over dist/.
 import path from "node:path";
 import { readDist } from "../src/build/dist-files.ts";
 import { checkLinks } from "../src/build/links-check.ts";

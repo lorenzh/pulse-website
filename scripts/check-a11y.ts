@@ -1,4 +1,4 @@
-// npm run check:a11y: axe, keyboard, focus, target size, no-JS and no-network checks on dist/.
+// bun run check:a11y: axe, keyboard, focus, target size, no-JS and no-network checks on dist/.
 import path from "node:path";
 import AxeBuilder from "@axe-core/playwright";
 import {
