@@ -9,6 +9,10 @@ export const PLACEHOLDERS = [
   "STATUS_URL",
   "AVAILABILITY",
   "LIMIT",
+  "BACKUPS",
+  "NETWORK_INDEPENDENCE",
+  "OPERATION",
+  "PARITY",
 ] as const;
 
 /** A scrolling area must take focus so keyboard users can scroll it; it is labelled as a region. */
@@ -27,7 +31,11 @@ const INCLUDED: { icon: IconName; title: string; text: React.ReactNode }[] = [
   {
     icon: "server",
     title: "Managed API",
-    text: "pulse-api with its database, backups and upgrades, run for you.",
+    text: (
+      <>
+        pulse-api with its database. Upgrades and backups: <Placeholder name="BACKUPS" />
+      </>
+    ),
   },
   {
     icon: "globe",
@@ -42,12 +50,21 @@ const INCLUDED: { icon: IconName; title: string; text: React.ReactNode }[] = [
   {
     icon: "monitor",
     title: "Status page on your domain",
-    text: "White-labelled, with TLS for a domain of your choice.",
+    text: (
+      <>
+        Planned: white-labelling and TLS for your own domain. <Placeholder name="AVAILABILITY" />
+      </>
+    ),
   },
   {
     icon: "bell",
     title: "Notifications included",
-    text: "Slack, Teams, email and webhooks, sent from our side.",
+    text: (
+      <>
+        Slack, Teams, email and webhooks, planned to be sent from our side.{" "}
+        <Placeholder name="AVAILABILITY" />
+      </>
+    ),
   },
 ];
 
@@ -88,7 +105,9 @@ const PLANS: Plan[] = [
       <>
         Hosted in <Placeholder name="REGIONS" />
       </>,
-      "Status page on a pulse subdomain",
+      <>
+        Status page on a pulse subdomain <Placeholder name="AVAILABILITY" />
+      </>,
       <>
         <Placeholder name="LIMIT" /> of history
       </>,
@@ -107,9 +126,15 @@ const PLANS: Plan[] = [
       <>
         <Placeholder name="LIMIT" /> checks and <Placeholder name="LIMIT" /> interval
       </>,
-      "Hosted regions plus your own probes",
-      "Your domain, logo, colours and fonts",
-      "Slack, Teams, reminders and heartbeats",
+      <>
+        Hosted regions plus your own probes <Placeholder name="AVAILABILITY" />
+      </>,
+      <>
+        Your domain, logo, colours and fonts <Placeholder name="AVAILABILITY" />
+      </>,
+      <>
+        Slack, Teams, reminders and heartbeats <Placeholder name="AVAILABILITY" />
+      </>,
     ],
     cta: { label: "Join the waitlist", href: "#waitlist" },
     featured: true,
@@ -129,8 +154,12 @@ const PLANS: Plan[] = [
       <>
         Data kept in <Placeholder name="DATA_LOCATION" />
       </>,
-      "Several status pages, private pages",
-      "Data processing agreement and invoice",
+      <>
+        Several status pages, private pages <Placeholder name="AVAILABILITY" />
+      </>,
+      <>
+        Data processing agreement and invoice <Placeholder name="AVAILABILITY" />
+      </>,
     ],
     cta: { label: "Join the waitlist", href: "#waitlist" },
   },
@@ -275,12 +304,16 @@ export function HostedContent() {
               <tr>
                 <th scope="row">Who runs the servers</th>
                 <td>You</td>
-                <td>We do</td>
+                <td>
+                  <Placeholder name="OPERATION" />
+                </td>
               </tr>
               <tr>
                 <th scope="row">Upgrades and backups</th>
                 <td>You run them</td>
-                <td>Included</td>
+                <td>
+                  <Placeholder name="BACKUPS" />
+                </td>
               </tr>
               <tr>
                 <th scope="row">Probe locations</th>
@@ -292,12 +325,16 @@ export function HostedContent() {
               <tr>
                 <th scope="row">Is the monitor down when your network is?</th>
                 <td>It can be</td>
-                <td>No, it runs elsewhere</td>
+                <td>
+                  <Placeholder name="NETWORK_INDEPENDENCE" />
+                </td>
               </tr>
               <tr>
                 <th scope="row">Checks file and API</th>
                 <td>Same</td>
-                <td>Same</td>
+                <td>
+                  <Placeholder name="PARITY" />
+                </td>
               </tr>
               <tr>
                 <th scope="row">Price</th>
