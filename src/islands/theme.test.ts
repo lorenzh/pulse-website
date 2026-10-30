@@ -1,5 +1,5 @@
+import { test } from "bun:test";
 import assert from "node:assert/strict";
-import { test } from "node:test";
 import { effectiveTheme, isTheme, otherTheme, themeLabel } from "./theme.ts";
 
 test("an explicit data-theme wins over the system preference", () => {

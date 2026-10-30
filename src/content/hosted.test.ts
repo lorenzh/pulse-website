@@ -1,9 +1,9 @@
+import { beforeAll, test } from "bun:test";
 import assert from "node:assert/strict";
-import { before, test } from "node:test";
 import { loadSite, type SiteModule } from "../build/load-site.ts";
 
 let hosted = "";
-before(async () => {
+beforeAll(async () => {
   const site: SiteModule = await loadSite();
   const files = site.renderSite({
     docs: [],

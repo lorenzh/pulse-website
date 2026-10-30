@@ -1,4 +1,4 @@
-// npm run check:budget: gzip size of HTML, CSS and JS per page against budget.json.
+// bun run check:budget: gzip size of HTML, CSS and JS per page against budget.json.
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { evaluatePage, parseBudget } from "../src/build/budget.ts";

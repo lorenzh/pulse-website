@@ -1,5 +1,5 @@
+import { test } from "bun:test";
 import assert from "node:assert/strict";
-import { test } from "node:test";
 import { checkLinks, pageUrl } from "./links-check.ts";
 
 const page = (body: string, head = "") =>

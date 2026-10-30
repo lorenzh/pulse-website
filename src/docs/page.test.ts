@@ -1,5 +1,5 @@
+import { test } from "bun:test";
 import assert from "node:assert/strict";
-import { test } from "node:test";
 import type { DocsConfig } from "./config.ts";
 import { buildDocPages, DocPageError, formatUpdated } from "./page.ts";
 

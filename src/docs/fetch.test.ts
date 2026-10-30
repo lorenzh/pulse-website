@@ -1,18 +1,18 @@
+import { afterAll, beforeAll, test } from "bun:test";
 import assert from "node:assert/strict";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { after, before, test } from "node:test";
 import { DocsFetchError, type FetchLike, loadDocFile, rawUrl } from "./fetch.ts";
 
 const sha = "a".repeat(40);
 const source = { repo: "lorenzh/pulse-api", sha, path: "docs/install.md" };
 let dir = "";
 
-before(async () => {
+beforeAll(async () => {
   dir = await mkdtemp(path.join(tmpdir(), "docs-fetch-"));
 });
-after(async () => {
+afterAll(async () => {
   await rm(dir, { recursive: true, force: true });
 });
 

@@ -1,4 +1,4 @@
-// npm run docs:bump [-- <repo>]: pins docs.config.json to the current main of each docs repo.
+// bun run docs:bump [<repo>]: pins docs.config.json to the current main of each docs repo.
 import { execFileSync } from "node:child_process";
 import { readFileSync, writeFileSync } from "node:fs";
 import {

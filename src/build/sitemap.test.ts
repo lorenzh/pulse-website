@@ -1,5 +1,5 @@
+import { test } from "bun:test";
 import assert from "node:assert/strict";
-import { test } from "node:test";
 import { robotsTxt, sitemapXml } from "./sitemap.ts";
 
 test("sitemap lists every page but 404.html", () => {

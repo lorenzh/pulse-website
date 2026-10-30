@@ -1,15 +1,15 @@
+import { afterAll, beforeAll, test } from "bun:test";
 import assert from "node:assert/strict";
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { after, before, test } from "node:test";
 import { fileForUrl, startStaticServer } from "./static-server.ts";
 
 let root = "";
 let origin = "";
 let close = async (): Promise<void> => {};
 
-before(async () => {
+beforeAll(async () => {
   root = await mkdtemp(path.join(tmpdir(), "static-"));
   await mkdir(path.join(root, "docs"));
   await writeFile(path.join(root, "index.html"), "home");
@@ -19,7 +19,7 @@ before(async () => {
   origin = started.origin;
   close = () => new Promise((resolve) => started.server.close(() => resolve()));
 });
-after(async () => {
+afterAll(async () => {
   await close();
   await rm(root, { recursive: true, force: true });
 });

@@ -7,7 +7,7 @@ export type SiteModule = typeof import("../site.tsx");
 
 /**
  * Compiles src/site.tsx (TSX, real React for the server render) into .build/ and imports it.
- * Node does not run JSX, so the page code goes through esbuild first. Packages stay external.
+ * Bun does not run this JSX, so the page code goes through esbuild first. Packages stay external.
  */
 export async function loadSite(root: string = process.cwd()): Promise<SiteModule> {
   const base = path.join(root, ".build");

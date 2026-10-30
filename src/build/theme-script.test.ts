@@ -1,5 +1,5 @@
+import { test } from "bun:test";
 import assert from "node:assert/strict";
-import { test } from "node:test";
 import { runInNewContext } from "node:vm";
 import { themeScriptHash } from "./theme-hash.ts";
 import { THEME_SCRIPT } from "./theme-script.ts";

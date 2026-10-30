@@ -1,5 +1,5 @@
+import { test } from "bun:test";
 import assert from "node:assert/strict";
-import { test } from "node:test";
 import { createSlugger, headingSlug } from "./slug.ts";
 
 test("lower-cases, drops punctuation and joins words with dashes", () => {

@@ -1,6 +1,6 @@
+import { test } from "bun:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { test } from "node:test";
 import { parseDocsConfig } from "./config.ts";
 import { findEntry, flattenNav, type NavGroup, navProblems, neighbours } from "./nav.ts";
 
