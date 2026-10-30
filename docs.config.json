@@ -1,0 +1,77 @@
+{
+  "repos": {
+    "api": {
+      "repo": "lorenzh/pulse-api",
+      "sha": "a1a78ac807a2825322f153412671a4ee7af2424b",
+      "date": "2026-10-30T04:23:53Z",
+      "files": [
+        "docs/concepts.md",
+        "docs/configuration.md",
+        "docs/development.md",
+        "docs/index.md",
+        "docs/install.md",
+        "docs/operation.md",
+        "docs/rest-api.md",
+        "docs/troubleshooting.md"
+      ]
+    },
+    "probe": {
+      "repo": "lorenzh/pulse-probe",
+      "sha": "576962c27447014cea10fbbd832e87bd19ac18c3",
+      "date": "2026-10-30T02:37:13Z",
+      "files": [
+        "docs/configuration.md",
+        "docs/development.md",
+        "docs/index.md",
+        "docs/install.md",
+        "docs/operation.md",
+        "docs/troubleshooting.md"
+      ]
+    },
+    "status": {
+      "repo": "lorenzh/pulse-status",
+      "sha": "5ab29f84f45f88141e1e0ce251d76555c8725d8b",
+      "date": "2026-10-30T05:04:01Z",
+      "files": [
+        "docs/configuration.md",
+        "docs/development.md",
+        "docs/index.md",
+        "docs/install.md",
+        "docs/operation.md",
+        "docs/theming.md",
+        "docs/troubleshooting.md"
+      ]
+    },
+    "notify": {
+      "repo": "lorenzh/pulse-notify",
+      "sha": "f0ed21fa5a25087363c66775bc45e325b73c8bec",
+      "date": "2026-10-30T05:03:57Z",
+      "files": [
+        "docs/channels.md",
+        "docs/channels/email.md",
+        "docs/channels/file.md",
+        "docs/channels/slack.md",
+        "docs/channels/teams.md",
+        "docs/channels/webhook.md",
+        "docs/configuration.md",
+        "docs/development.md",
+        "docs/index.md",
+        "docs/install.md",
+        "docs/operation.md",
+        "docs/troubleshooting.md"
+      ]
+    },
+    "contract": {
+      "repo": "lorenzh/pulse-contract",
+      "sha": "e49492764054d05b09e2e76453e7b963d959357b",
+      "date": "2026-10-30T04:40:23Z",
+      "files": ["docs/index.md"]
+    },
+    "kit": {
+      "repo": "lorenzh/pulse-kit",
+      "sha": "72adb59b980e2dd4802a1fb8b28eaa5b43b040fc",
+      "date": "2026-10-29T23:43:46Z",
+      "files": ["docs/index.md"]
+    }
+  }
+}

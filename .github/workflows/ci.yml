@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    uses: lorenzh/pulse-config/.github/workflows/check.yml@8bdf9171917f115195095df93b8d90d23e90e9ac
+
+  site:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      # The build fetches the docs at the SHAs of docs.config.json from raw.githubusercontent.com.
+      - run: npm run build
+      - run: npm run check:links
+      - run: npm run check:budget
+      - run: npm run check:a11y

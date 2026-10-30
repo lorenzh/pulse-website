@@ -1,0 +1,116 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+:root {
+  --gutter: max(20px, calc((100vw - var(--content-max)) / 2));
+  --ease: cubic-bezier(0.2, 0, 0, 1);
+  --dur: 150ms;
+}
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-padding-top: 16px;
+}
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: var(--fs-body);
+  line-height: 1.75;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+main {
+  flex: 1;
+  outline: none;
+}
+h1,
+h2,
+h3 {
+  margin: 0 0 0.5em;
+  color: var(--text);
+}
+p {
+  margin: 0 0 1em;
+}
+a {
+  color: var(--accent-text);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+a:hover {
+  text-decoration-thickness: 2px;
+}
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+::selection {
+  background: var(--tint);
+}
+code,
+pre {
+  font-family: var(--font-mono);
+}
+:not(pre) > code {
+  font-size: 0.875em;
+  background: var(--surface);
+  border-radius: var(--radius-sm);
+  padding: 0.1em 0.35em;
+  overflow-wrap: anywhere;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+.skip {
+  position: absolute;
+  left: -9999px;
+  top: 8px;
+  z-index: 20;
+  background: var(--strong);
+  color: var(--on-strong);
+  padding: 0 20px;
+  min-height: var(--touch);
+  display: inline-flex;
+  align-items: center;
+  border-radius: var(--radius-pill);
+  text-decoration: none;
+}
+.skip:focus {
+  left: 16px;
+}
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: var(--fs-tag);
+  line-height: 1.4;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 0 0 0.75em;
+}
+.lead {
+  color: var(--lead);
+  font-size: var(--fs-lead);
+  line-height: 1.5;
+  max-width: 62ch;
+}
+.t-accent {
+  color: var(--accent-text);
+}
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none;
+  }
+}
