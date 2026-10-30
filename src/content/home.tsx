@@ -1,4 +1,6 @@
+import { ButtonLink } from "../components/ButtonLink.tsx";
 import { Icon, type IconName } from "../components/Icon.tsx";
+import { PageEffects } from "../components/PageEffects.tsx";
 import { highlight } from "../docs/highlight.ts";
 import { ArchitectureDiagram } from "./architecture.tsx";
 import {
@@ -30,7 +32,7 @@ const FEATURES: { icon: IconName; title: string; text: string }[] = [
   {
     icon: "shield",
     title: "Quorum",
-    text: "Probes in several locations. A check is down only when the quorum agrees.",
+    text: "Probes in several locations. With two or more locations reporting, a check is down only when at least two see it down.",
   },
   {
     icon: "calendar",
@@ -121,8 +123,9 @@ function ChecksSample() {
 export function HomeContent() {
   return (
     <>
+      <PageEffects />
       <section className="hero">
-        <div className="hero-copy">
+        <div className="hero-copy" data-reveal>
           <p className="eyebrow">Uptime monitor · Status page · MIT licensed</p>
           <h1 className="t-display">
             Know when it breaks. Tell people <span className="t-accent">when it’s back</span>.
@@ -133,32 +136,42 @@ export function HomeContent() {
             email, a webhook or a file. Self-hosted with one Docker Compose file.
           </p>
           <div className="btn-row">
-            <a className="btn btn-primary" href="/docs/api/install/">
-              Start with Docker Compose
-              <Icon name="arrow" size={16} />
-            </a>
-            <a className="btn btn-secondary" href="#how">
-              See how it works
-            </a>
+            <ButtonLink
+              href="/docs/api/install/"
+              variant="primary"
+              label="Start with Docker Compose"
+              icon="arrow"
+            />
+            <ButtonLink href="#how" variant="secondary" label="See how it works" />
           </div>
         </div>
-        <Terminal />
+        <div className="hero-side" data-reveal>
+          <Terminal />
+          <p className="terminal-note">
+            The second command generates the probe token with <code>openssl rand -hex 32</code> and
+            pastes it as <code>PULSE_PROBE_TOKEN</code> in <code>.env</code>. The API refuses to
+            start with the placeholder token.
+          </p>
+        </div>
       </section>
 
       <section className="band" aria-labelledby="preview-title">
         <div className="split">
-          <div>
+          <div data-reveal>
             <p className="eyebrow">The status page</p>
             <h2 id="preview-title" className="t-h2">
               What your visitors see
             </h2>
             <p className="lead">
               Every check with its state written as a word, 90 days of uptime, open and recently
-              resolved incidents, and planned maintenance. Targets and error reasons stay private by
-              default. Your name, logo, colours and fonts replace the losoft look with one theme
+              resolved incidents, and planned maintenance. Only check targets (URLs) and error
+              details stay private by default. Components group checks, and the page shows
+              components. Your name, logo, colours and fonts replace the losoft look with one theme
               file.
             </p>
-            <a href="/docs/status/theming/">Theming and white label</a>
+            <a className="text-link" href="/docs/status/theming/">
+              Theming and white label
+            </a>
           </div>
           <StatusMock />
         </div>
@@ -171,7 +184,7 @@ export function HomeContent() {
         </h2>
         <ul className="feature-grid">
           {FEATURES.map((f) => (
-            <li key={f.title} className="card">
+            <li key={f.title} className="card" data-reveal>
               <Icon name={f.icon} size={22} />
               <h3 className="t-h3">{f.title}</h3>
               <p>{f.text}</p>
@@ -189,7 +202,9 @@ export function HomeContent() {
           Probes run the checks and post results. The API decides the state of every check and keeps
           the incidents. The status page and the notifier only read from it.
         </p>
-        <ArchitectureDiagram />
+        <div data-reveal>
+          <ArchitectureDiagram />
+        </div>
         <p>
           All four share <code>pulse-contract</code>: the wire types, runtime validators and a
           version header, so a mismatched deploy fails loudly instead of quietly.
@@ -198,7 +213,7 @@ export function HomeContent() {
 
       <section className="band" aria-labelledby="start-title">
         <div className="split">
-          <div>
+          <div data-reveal>
             <p className="eyebrow">Configuration</p>
             <h2 id="start-title" className="t-h2">
               Checks live in one file
@@ -207,9 +222,13 @@ export function HomeContent() {
               Describe each check in <code>checks.json</code>. Unknown keys stop the start with one
               line that names the entry and the key, so typos never pass silently.
             </p>
-            <a href="/docs/api/configuration/">Read the configuration guide</a>
+            <a className="text-link" href="/docs/api/configuration/">
+              Read the configuration guide
+            </a>
           </div>
-          <ChecksSample />
+          <div data-reveal>
+            <ChecksSample />
+          </div>
         </div>
       </section>
 
@@ -220,7 +239,7 @@ export function HomeContent() {
         </h2>
         <ul className="card-grid">
           {DOC_CARDS.map((c) => (
-            <li key={c.href}>
+            <li key={c.href} data-reveal>
               <a className="card card-link" href={c.href}>
                 <span className="eyebrow">{c.kicker}</span>
                 <span className="t-h3">{c.title}</span>

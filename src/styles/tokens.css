@@ -22,6 +22,12 @@
   --radius-lg: 16px;
   --radius-pill: 999px;
   --section-pad: clamp(40px, 5vw, 72px);
+  --section-space: clamp(64px, 8vw, 128px);
+  --ease: cubic-bezier(0.2, 0, 0, 1);
+  --dur-reveal: 700ms;
+  --dur-lift: 250ms;
+  --dur-underline: 300ms;
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
   color-scheme: light dark;
 }
 
@@ -66,6 +72,10 @@
   --term-prompt: #c29bd3;
   --term-link: #9da7d4;
   --term-dot: #54406a;
+  --net-line: rgba(138, 79, 159, 0.04);
+  --net-node: rgba(138, 79, 159, 0.05);
+  --net-pulse: rgba(138, 79, 159, 0.06);
+  --net-pulse2: rgba(86, 97, 154, 0.06);
   --term-error: #f2a7ab;
   color-scheme: light;
 }
@@ -111,6 +121,10 @@
     --term-prompt: #c29bd3;
     --term-link: #9da7d4;
     --term-dot: #54406a;
+    --net-line: rgba(194, 155, 211, 0.04);
+    --net-node: rgba(194, 155, 211, 0.05);
+    --net-pulse: rgba(194, 155, 211, 0.06);
+    --net-pulse2: rgba(157, 167, 212, 0.06);
     --term-error: #f2a7ab;
     color-scheme: dark;
   }
@@ -156,6 +170,10 @@
   --term-prompt: #c29bd3;
   --term-link: #9da7d4;
   --term-dot: #54406a;
+  --net-line: rgba(194, 155, 211, 0.04);
+  --net-node: rgba(194, 155, 211, 0.05);
+  --net-pulse: rgba(194, 155, 211, 0.06);
+  --net-pulse2: rgba(157, 167, 212, 0.06);
   --term-error: #f2a7ab;
   color-scheme: dark;
 }

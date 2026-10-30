@@ -48,3 +48,27 @@ test("the script hash is stable for the fixed script", () => {
   assert.match(themeScriptHash(), /^sha256-[A-Za-z0-9+/]{43}=$/);
   assert.equal(themeScriptHash(), themeScriptHash());
 });
+
+function runReveal(options: { observer: boolean; reduced: boolean }): string[] {
+  const classes: string[] = [];
+  const sandbox = {
+    window: options.observer ? { IntersectionObserver: class {} } : {},
+    matchMedia: () => ({ matches: options.reduced }),
+    document: {
+      documentElement: {
+        classList: { add: (c: string) => classes.push(c) },
+        setAttribute: () => undefined,
+      },
+    },
+    localStorage: { getItem: () => null },
+  };
+  // eslint-disable-next-line sonarjs/code-eval -- runs our own constant script in a vm sandbox with fake globals
+  runInNewContext(THEME_SCRIPT, sandbox);
+  return classes;
+}
+
+test("js-reveal is set only with IntersectionObserver and without reduced motion", () => {
+  assert.deepEqual(runReveal({ observer: true, reduced: false }), ["js", "js-reveal"]);
+  assert.deepEqual(runReveal({ observer: true, reduced: true }), ["js"]);
+  assert.deepEqual(runReveal({ observer: false, reduced: false }), ["js"]);
+});

@@ -5,7 +5,6 @@
 }
 :root {
   --gutter: max(20px, calc((100vw - var(--content-max)) / 2));
-  --ease: cubic-bezier(0.2, 0, 0, 1);
   --dur: 150ms;
 }
 html {
@@ -41,8 +40,10 @@ a {
   text-decoration-thickness: 1px;
   text-underline-offset: 3px;
 }
-a:hover {
-  text-decoration-thickness: 2px;
+@media (hover: hover) {
+  a:hover {
+    text-decoration-thickness: 2px;
+  }
 }
 :focus-visible {
   outline: 2px solid var(--accent);
@@ -109,8 +110,23 @@ pre {
 .t-accent {
   color: var(--accent-text);
 }
+/* Reduced motion: no animation and no transition anywhere. The scroll-in items are simply
+   visible, the heart only fills and the copy button only swaps its icon. */
 @media (prefers-reduced-motion: reduce) {
-  * {
-    transition: none;
+  *,
+  *::before,
+  *::after {
+    /* biome-ignore lint/complexity/noImportantStyles: reduced motion must beat every rule */
+    animation: none !important;
+    /* biome-ignore lint/complexity/noImportantStyles: reduced motion must beat every rule */
+    transition: none !important;
+    /* biome-ignore lint/complexity/noImportantStyles: reduced motion must beat every rule */
+    scroll-behavior: auto !important;
+  }
+  [data-reveal] {
+    /* biome-ignore lint/complexity/noImportantStyles: reduced motion must beat the hidden state */
+    opacity: 1 !important;
+    /* biome-ignore lint/complexity/noImportantStyles: reduced motion must beat the hidden state */
+    transform: none !important;
   }
 }

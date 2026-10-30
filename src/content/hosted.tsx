@@ -1,4 +1,6 @@
+import { ButtonLink } from "../components/ButtonLink.tsx";
 import { Icon, type IconName } from "../components/Icon.tsx";
+import { PageEffects } from "../components/PageEffects.tsx";
 
 export const PLACEHOLDERS = [
   "PRICE",
@@ -13,6 +15,10 @@ export const PLACEHOLDERS = [
   "NETWORK_INDEPENDENCE",
   "OPERATION",
   "PARITY",
+  "DISCOUNT",
+  "REGION",
+  "BACKUP REGION",
+  "RETENTION",
 ] as const;
 
 /** A scrolling area must take focus so keyboard users can scroll it; it is labelled as a region. */
@@ -103,13 +109,13 @@ const PLANS: Plan[] = [
         <Placeholder name="LIMIT" /> checks and <Placeholder name="LIMIT" /> interval
       </>,
       <>
-        Hosted in <Placeholder name="REGIONS" />
+        Hosted in <Placeholder name="REGION" />
       </>,
       <>
         Status page on a pulse subdomain <Placeholder name="AVAILABILITY" />
       </>,
       <>
-        <Placeholder name="LIMIT" /> of history
+        <Placeholder name="RETENTION" /> of history
       </>,
     ],
     cta: { label: "Join the waitlist", href: "#waitlist" },
@@ -128,6 +134,12 @@ const PLANS: Plan[] = [
       </>,
       <>
         Hosted regions plus your own probes <Placeholder name="AVAILABILITY" />
+      </>,
+      <>
+        Backups in <Placeholder name="BACKUP REGION" />, kept for <Placeholder name="RETENTION" />
+      </>,
+      <>
+        Yearly billing: <Placeholder name="DISCOUNT" />
       </>,
       <>
         Your domain, logo, colours and fonts <Placeholder name="AVAILABILITY" />
@@ -208,6 +220,7 @@ const FAQ: { q: string; a: React.ReactNode }[] = [
 export function HostedContent() {
   return (
     <>
+      <PageEffects />
       <section className="hero hero-single">
         <p className="eyebrow">Hosted pulse · Early access</p>
         <h1 className="t-h1">
@@ -224,13 +237,8 @@ export function HostedContent() {
           limit or a promise that nobody has fixed.
         </p>
         <div className="btn-row">
-          <a className="btn btn-primary" href="#waitlist">
-            About the waitlist
-            <Icon name="arrow" size={16} />
-          </a>
-          <a className="btn btn-secondary" href="#plans">
-            Compare plans
-          </a>
+          <ButtonLink href="#waitlist" variant="primary" label="About the waitlist" icon="arrow" />
+          <ButtonLink href="#plans" variant="secondary" label="Compare plans" />
         </div>
       </section>
 
@@ -240,7 +248,7 @@ export function HostedContent() {
         </h2>
         <ul className="feature-grid">
           {INCLUDED.map((i) => (
-            <li key={i.title} className="card">
+            <li key={i.title} className="card" data-reveal>
               <Icon name={i.icon} size={22} />
               <h3 className="t-h3">{i.title}</h3>
               <p>{i.text}</p>
@@ -254,10 +262,20 @@ export function HostedContent() {
         <h2 id="plans-title" className="t-h2">
           Start free on your own server, move up when you want us to run it
         </h2>
+        <p className="notice" role="note">
+          Planned offer, details not final
+        </p>
         <ul className="plan-grid">
           {PLANS.map((p) => (
-            <li key={p.name} className={p.featured ? "card plan plan-featured" : "card plan"}>
-              <h3 className="t-h3">{p.name}</h3>
+            <li
+              key={p.name}
+              className={p.featured ? "card plan plan-featured" : "card plan"}
+              data-reveal
+            >
+              <h3 className="t-h3">
+                {p.name}
+                {p.name === "Self-hosted" ? null : <span className="tag plan-tag">planned</span>}
+              </h3>
               <p>{p.blurb}</p>
               <p className="plan-priceline">{p.price}</p>
               <ul className="plan-items">
@@ -269,21 +287,33 @@ export function HostedContent() {
                   </li>
                 ))}
               </ul>
-              <a className={p.featured ? "btn btn-primary" : "btn btn-secondary"} href={p.cta.href}>
-                {p.cta.label}
-              </a>
+              <ButtonLink
+                href={p.cta.href}
+                variant={p.featured ? "primary" : "secondary"}
+                label={p.cta.label}
+              />
             </li>
           ))}
         </ul>
-        <div id="oss" className="card oss">
+        <div id="oss" className="card oss" data-island="heart-burst" data-reveal>
+          <span className="heart" aria-hidden="true">
+            <Icon name="heart" size={28} />
+          </span>
           <p className="eyebrow">Open source</p>
-          <h3 className="t-h3">Terms for open-source projects</h3>
+          <h3 className="t-h3">
+            Terms for open-source projects <span className="tag plan-tag">placeholder</span>
+          </h3>
           <p>
+            <Placeholder name="DISCOUNT" /> for qualifying projects. Terms:{" "}
             <Placeholder name="OSS_TERMS" />
           </p>
+          <a className="text-link" href="#faq">
+            Read the open-source question
+          </a>
         </div>
         <p className="fineprint">
-          Pricing: <Placeholder name="PRICE" />. Trial: <Placeholder name="TRIAL" />.
+          Pricing: <Placeholder name="PRICE" />. Trial: <Placeholder name="TRIAL" />. Backups:{" "}
+          <Placeholder name="BACKUP REGION" />, kept for <Placeholder name="RETENTION" />.
         </p>
       </section>
 
@@ -348,7 +378,7 @@ export function HostedContent() {
         </div>
       </section>
 
-      <section className="band" aria-labelledby="faq-title">
+      <section id="faq" className="band" aria-labelledby="faq-title">
         <h2 id="faq-title" className="t-h2">
           Questions
         </h2>

@@ -36,13 +36,33 @@ test("tables sit in a focusable, labelled scroll region", () => {
   );
 });
 
-test("code blocks are highlighted, labelled and get a copy slot", () => {
+test("code blocks are highlighted and labelled; only command blocks get a copy slot", () => {
   const doc = renderMarkdown('# T\n\n```json\n{"a": 1}\n```\n\n```sh\necho <x>\n```\n', keep);
   assert.match(doc.html, /aria-label="JSON"/);
   assert.match(doc.html, /tok-key/);
   assert.match(doc.html, /aria-label="Shell commands"/);
   assert.match(doc.html, /echo &lt;x&gt;/);
-  assert.equal(doc.html.match(/data-island="copy-button"/g)?.length, 2);
+  assert.equal(doc.html.match(/data-island="copy-button"/g)?.length, 1);
+  assert.match(doc.html, /data-copy="echo &lt;x&gt;"/);
+});
+
+test("copy slots hold the commands without prompt, output or comments", () => {
+  const doc = renderMarkdown(
+    "# T\n\n```bash\n$ curl localhost\n[]\n$ ls # list\n```\n\n```text\n$ ls\n```\n\n```console\nStarted\n```\n\n```\nplain\n```\n",
+    keep,
+  );
+  assert.equal(doc.html.match(/data-island="copy-button"/g)?.length, 1);
+  assert.match(doc.html, /data-copy="curl localhost\nls # list"/);
+  assert.equal(doc.html.match(/has-copy/g)?.length, 1);
+});
+
+test("a shell-tagged block that only shows an HTTP response gets no copy slot", () => {
+  const doc = renderMarkdown(
+    '# T\n\n```bash\nHTTP/1.1 200 OK\nContent-Type: application/json\n\n{"status":"ok"}\n```\n\n```sh\ncurl localhost\n```\n',
+    keep,
+  );
+  assert.equal(doc.html.match(/data-island="copy-button"/g)?.length, 1);
+  assert.match(doc.html, /data-copy="curl localhost"/);
 });
 
 test("links go through the resolver; external ones get rel=noopener", () => {

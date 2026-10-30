@@ -1,5 +1,5 @@
 import { siteConfig } from "../../site.config.ts";
-import { Icon } from "./Icon.tsx";
+import { ButtonLink } from "./ButtonLink.tsx";
 import { LogoMark } from "./Logo.tsx";
 
 export const NAV_LINKS = [
@@ -10,8 +10,19 @@ export const NAV_LINKS = [
   { href: "/docs/api/rest-api/", label: "API" },
 ] as const;
 
-/** `current` is the href of the link that gets aria-current="page". */
+/** The header button: GitHub everywhere, the waitlist on the Hosted page. */
+function headerCta(current: string | undefined): { href: string; label: string } {
+  return current === "/hosted/"
+    ? { href: "#waitlist", label: "Join the waitlist" }
+    : { href: siteConfig.repoUrl, label: "GitHub" };
+}
+
+/**
+ * `current` is the href of the link that gets aria-current="page". Tab order on desktop: the
+ * navigation, the button, then the theme toggle at the far right.
+ */
 export function SiteHeader({ current }: { current?: string }) {
+  const cta = headerCta(current);
   return (
     <header className="site-header">
       <div className="hdr-row">
@@ -25,17 +36,23 @@ export function SiteHeader({ current }: { current?: string }) {
               {l.label}
             </a>
           ))}
-          <a className="nav-gh" href={siteConfig.repoUrl}>
-            GitHub
+          <a className="nav-gh" href={cta.href}>
+            {cta.label}
           </a>
         </nav>
         <div className="hdr-actions">
+          <span className="hdr-gh">
+            <ButtonLink
+              href={cta.href}
+              variant="secondary"
+              label={cta.label}
+              {...(current === "/hosted/"
+                ? {}
+                : { icon: "github" as const, iconSide: "start" as const })}
+            />
+          </span>
           <span className="island-slot" data-island="theme-toggle" />
           <span className="island-slot menu-slot" data-island="menu-toggle" />
-          <a className="btn btn-secondary hdr-gh" href={siteConfig.repoUrl}>
-            <Icon name="github" size={16} />
-            GitHub
-          </a>
         </div>
       </div>
     </header>

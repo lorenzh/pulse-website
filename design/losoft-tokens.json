@@ -353,6 +353,38 @@
         "usage": "Console views: window dots in the title bar (decorative)."
       },
       {
+        "name": "net-line",
+        "value": {
+          "light": "rgba(138, 79, 159, 0.04)",
+          "dark": "rgba(194, 155, 211, 0.04)"
+        },
+        "usage": "Node-network background (decorative canvas): links. Low alpha; the worst blend is checked against the text colours."
+      },
+      {
+        "name": "net-node",
+        "value": {
+          "light": "rgba(138, 79, 159, 0.05)",
+          "dark": "rgba(194, 155, 211, 0.05)"
+        },
+        "usage": "Node-network background: receivers and senders."
+      },
+      {
+        "name": "net-pulse",
+        "value": {
+          "light": "rgba(138, 79, 159, 0.06)",
+          "dark": "rgba(194, 155, 211, 0.06)"
+        },
+        "usage": "Node-network background: shooting-star pulses."
+      },
+      {
+        "name": "net-pulse2",
+        "value": {
+          "light": "rgba(86, 97, 154, 0.06)",
+          "dark": "rgba(157, 167, 212, 0.06)"
+        },
+        "usage": "Node-network background: the second pulse colour (12 % of pulses)."
+      },
+      {
         "name": "term-error",
         "value": {
           "light": "#f2a7ab",
@@ -611,6 +643,36 @@
         "name": "section-pad",
         "value": "clamp(40px, 5vw, 72px)",
         "usage": "Vertical padding of page sections (40 → 72px)."
+      },
+      {
+        "name": "section-space",
+        "value": "clamp(64px, 8vw, 128px)",
+        "usage": "Vertical space between the sections of Home and Hosted (64 → 128px). No rules or borders between sections."
+      },
+      {
+        "name": "ease",
+        "value": "cubic-bezier(0.2, 0, 0, 1)",
+        "usage": "Easing of scroll-in, card lift and the nav underline."
+      },
+      {
+        "name": "dur-reveal",
+        "value": "700ms",
+        "usage": "Scroll-in duration (opacity and translateY(32px))."
+      },
+      {
+        "name": "dur-lift",
+        "value": "250ms",
+        "usage": "Card lift, heart fill."
+      },
+      {
+        "name": "dur-underline",
+        "value": "300ms",
+        "usage": "Nav link underline."
+      },
+      {
+        "name": "ease-spring",
+        "value": "cubic-bezier(0.34, 1.56, 0.64, 1)",
+        "usage": "Button transform."
       }
     ]
   }
