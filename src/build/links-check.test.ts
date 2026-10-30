@@ -75,3 +75,50 @@ test("inline style url() to another origin fails", () => {
   });
   assert.equal(report.problems.length, 1);
 });
+
+const UNSAFE_HREFS = [
+  "javascript:alert(1)",
+  " JAVASCRIPT:x",
+  "&#106;avascript:x",
+  "&#x6A;avascript:x",
+  "javascript&colon;x",
+  "java&Tab;script:x",
+  "&amp;#106;avascript:x",
+  "tel:+1",
+  "data:text/html,x",
+  "vbscript:msgbox(1)",
+  "file:///etc/passwd",
+  // eslint-disable-next-line sonarjs/no-clear-text-protocols -- a scheme fixture, never fetched
+  "ftp://x",
+  "foo:bar",
+  "blob:https://x/y",
+];
+
+test("each unsafe scheme is one unsafe-link problem, not a dangling link", () => {
+  for (const href of UNSAFE_HREFS) {
+    const report = run({ "index.html": page(`<a href="${href}">x</a>`) });
+    assert.equal(report.problems.length, 1, href);
+    assert.match(report.problems[0] ?? "", /^index\.html: unsafe link scheme in a href="/, href);
+    assert.equal(report.internalLinks + report.externalLinks, 0, href);
+  }
+});
+
+test("an unsafe srcset candidate or form action is reported", () => {
+  const report = run({
+    "index.html": page(
+      '<img srcset="/a.png 1x, javascript:x 2x"><form action="data:text/html,x"></form>',
+    ),
+  });
+  assert.equal(report.problems.length, 2);
+  assert.match(report.problems.join("\n"), /unsafe link scheme in img srcset=/);
+  assert.match(report.problems.join("\n"), /unsafe link scheme in form action="data:/);
+});
+
+test("mailto links pass and count as external links", () => {
+  const report = run({
+    "index.html": page('<a href="mailto:a@b.c">m</a><a href="MAILTO:x@y.z">n</a>'),
+  });
+  assert.deepEqual(report.problems, []);
+  assert.equal(report.externalLinks, 2);
+  assert.equal(report.internalLinks, 0);
+});

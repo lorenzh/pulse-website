@@ -13,8 +13,33 @@ export function parseAttrs(source: string): Record<string, string> {
   return attrs;
 }
 
-function decode(value: string): string {
-  return value.replaceAll("&amp;", "&").replaceAll("&quot;", '"').replaceAll("&#39;", "'");
+const NAMED: Record<string, string> = {
+  amp: "&",
+  quot: '"',
+  colon: ":",
+  tab: "\t",
+  newline: "\n",
+  lpar: "(",
+  rpar: ")",
+};
+
+function fromCodePoint(code: number, raw: string): string {
+  return Number.isFinite(code) && code >= 0 && code <= 0x10ffff ? String.fromCodePoint(code) : raw;
+}
+
+/**
+ * Decodes an attribute value once, like the browser: `&amp;`, `&quot;`, numeric references and the
+ * named references that can hide a URL scheme. Any other `&name;` stays as it is.
+ */
+export function decode(value: string): string {
+  return value.replace(
+    /&(?:#(\d+)|#x([\da-f]+)|([a-z]+));/gi,
+    (raw, dec: string | undefined, hex: string | undefined, name: string | undefined) => {
+      if (dec !== undefined) return fromCodePoint(Number.parseInt(dec, 10), raw);
+      if (hex !== undefined) return fromCodePoint(Number.parseInt(hex, 16), raw);
+      return NAMED[(name ?? "").toLowerCase()] ?? raw;
+    },
+  );
 }
 
 /** href, src and form action references of every tag. */

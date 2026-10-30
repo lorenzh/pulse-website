@@ -1,4 +1,4 @@
-// bun run check:a11y: axe, keyboard, focus, target size, no-JS and no-network checks on dist/.
+// bun run check:a11y: axe, keyboard, focus, target size, no-JS, no-network and CSP checks on dist/.
 import path from "node:path";
 import AxeBuilder from "@axe-core/playwright";
 import {
@@ -35,14 +35,74 @@ async function newContext(
     theme: "light" | "dark";
     javaScript?: boolean;
     motion?: "reduce" | "no-preference";
+    /** Receives each CSP violation; by default it fails the run. */
+    csp?: (violation: string) => void;
   },
 ): Promise<BrowserContext> {
-  return browser.newContext({
+  const context = await browser.newContext({
     viewport: { width: options.width, height: 800 },
     colorScheme: options.theme,
     javaScriptEnabled: options.javaScript ?? true,
     reducedMotion: options.motion ?? "reduce",
   });
+  await watchCsp(context, options.csp ?? ((v) => fail("csp", v)));
+  return context;
+}
+
+/**
+ * Reports every Content-Security-Policy violation and CSP console message of the context, before
+ * any page loads. The console listener also covers contexts without JavaScript.
+ */
+async function watchCsp(
+  context: BrowserContext,
+  report: (violation: string) => void,
+): Promise<void> {
+  await context.exposeBinding("__cspViolation", (source, violation: string) => {
+    report(`${source.page?.url() ?? "?"}: CSP violation: ${violation}`);
+  });
+  await context.addInitScript(() => {
+    const w = window as unknown as { __cspViolation: (v: string) => Promise<void> };
+    document.addEventListener(
+      "securitypolicyviolation",
+      (e) => {
+        void w.__cspViolation(
+          `${e.violatedDirective} ${e.blockedURI} ${e.sourceFile}:${e.lineNumber}`,
+        );
+      },
+      true,
+    );
+  });
+  context.on("console", (message) => {
+    const text = message.text();
+    if (text.includes("Content Security Policy") || text.includes("Content-Security-Policy")) {
+      report(`${message.page()?.url() ?? "?"}: CSP console: ${text}`);
+    }
+  });
+}
+
+/** Positive control: a blocked inline script must reach the CSP listener. */
+async function checkCspListener(browser: Browser): Promise<void> {
+  const seen: string[] = [];
+  const context = await newContext(browser, {
+    width: 1280,
+    theme: "light",
+    csp: (v) => seen.push(v),
+  });
+  const page = await context.newPage();
+  await page.goto(`${origin}/`);
+  await page.evaluate(() => {
+    const s = document.createElement("script");
+    s.textContent = "1";
+    document.head.append(s);
+  });
+  for (let waited = 0; seen.length === 0 && waited < 2000; waited += 50) {
+    await page.waitForTimeout(50);
+  }
+  if (!seen.some((v) => /script-src(-elem)?\b/.test(v))) {
+    fail("csp listener", "no violation seen for a blocked inline script");
+  }
+  console.log(`csp listener saw ${seen.length} violation(s) for a blocked inline script`);
+  await context.close();
 }
 
 /** Aborts and records every request to another origin; records failed local requests. */
@@ -666,6 +726,7 @@ try {
   await checkCopyButtons(browser);
   await checkCopyClearance(browser);
   for (const theme of THEMES) await checkMotionPages(browser, theme);
+  await checkCspListener(browser);
 } finally {
   await browser.close();
   server.close();

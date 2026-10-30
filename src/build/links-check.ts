@@ -7,6 +7,7 @@ import {
   isCrossOrigin,
   type Ref,
 } from "./html-refs.ts";
+import { isSafeRef, urlScheme } from "./url-safety.ts";
 
 export type LinkReport = {
   problems: string[];
@@ -25,7 +26,8 @@ function resolveTarget(
   from: string,
   value: string,
 ): { file: string; fragment: string } | undefined {
-  if (/^(mailto:|tel:|javascript:|data:)/i.test(value)) return undefined;
+  // checkPage reports unsafe schemes and counts mailto: before it gets here; CSS url() may hold one.
+  if (urlScheme(value) === "mailto") return undefined;
   const hashAt = value.indexOf("#");
   const fragment = hashAt === -1 ? "" : value.slice(hashAt + 1);
   const withoutHash = hashAt === -1 ? value : value.slice(0, hashAt);
@@ -77,6 +79,16 @@ function checkInternal(page: Page, ref: Ref, rel: string | undefined, deps: Deps
 
 function checkPage(page: Page, html: string, deps: Deps): void {
   for (const ref of collectRefs(html)) {
+    if (!isSafeRef(ref)) {
+      deps.report.problems.push(
+        `${page.file}: unsafe link scheme in ${ref.tag} ${ref.attr}=${JSON.stringify(ref.value)}`,
+      );
+      continue;
+    }
+    if (urlScheme(ref.value) === "mailto") {
+      deps.report.externalLinks += 1;
+      continue;
+    }
     const rel = ref.tag === "link" ? linkRel(html, ref.value) : undefined;
     if (!isCrossOrigin(ref.value)) {
       checkInternal(page, ref, rel, deps);

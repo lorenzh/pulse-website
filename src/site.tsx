@@ -1,8 +1,10 @@
 import type { ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { siteConfig } from "../site.config.ts";
+import { withCsp } from "./build/csp.ts";
 import { type PageMeta, pageMeta } from "./build/meta.ts";
 import { robotsTxt, sitemapXml } from "./build/sitemap.ts";
+import { LINK_RULE, UnsafeLinkError, unsafeRefs } from "./build/url-safety.ts";
 import { DocsPageContent } from "./components/DocsPage.tsx";
 import { Document } from "./components/Document.tsx";
 import { HomeContent } from "./content/home.tsx";
@@ -56,7 +58,17 @@ function renderPage(def: PageDef, assets: SiteAssets): string {
     if (!src) throw new Error(`page ${def.path} uses the island "${n}" but no bundle exists`);
     return src;
   });
-  return draw(scripts);
+  return withCsp(draw(scripts));
+}
+
+/** Fails the build on the first link with an unsafe scheme, in hand-written and docs pages alike. */
+function assertSafeLinks(file: string, html: string): void {
+  const ref = unsafeRefs(html)[0];
+  if (ref) {
+    throw new UnsafeLinkError(
+      `${file}: unsafe link ${ref.tag} ${ref.attr}=${JSON.stringify(ref.value)}: ${LINK_RULE}`,
+    );
+  }
 }
 
 function docsDefs(docs: DocPage[], siteUrl: string): PageDef[] {
@@ -139,7 +151,11 @@ export function renderSite(input: {
       body: <NotFoundContent />,
     },
   ];
-  const files = defs.map((d) => ({ file: d.file, content: renderPage(d, input.assets) }));
+  const files = defs.map((d) => {
+    const content = renderPage(d, input.assets);
+    assertSafeLinks(d.file, content);
+    return { file: d.file, content };
+  });
   files.push({
     file: "sitemap.xml",
     content: sitemapXml(

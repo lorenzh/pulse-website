@@ -1,5 +1,6 @@
 import { test } from "bun:test";
 import assert from "node:assert/strict";
+import { UnsafeLinkError } from "../build/url-safety.ts";
 import type { DocsConfig } from "./config.ts";
 import { docUrl, editUrl, type LinkContext, LinkError, resolveLink } from "./links.ts";
 
@@ -71,13 +72,55 @@ test("links to unpublished files point to the pinned blob on GitHub", () => {
   );
 });
 
-test("http links stay; other schemes are not external pages", () => {
+test("http links stay; mailto stays but is not an external page", () => {
   const c = ctx("api", "docs/install.md");
   assert.deepEqual(resolveLink("https://nodemailer.com", c), {
     href: "https://nodemailer.com",
     isExternal: true,
   });
+  // eslint-disable-next-line sonarjs/no-clear-text-protocols -- a scheme fixture, never fetched
+  assert.deepEqual(resolveLink("HTTP://x", c), { href: "HTTP://x", isExternal: true });
   assert.deepEqual(resolveLink("mailto:a@b.c", c), { href: "mailto:a@b.c", isExternal: false });
+  assert.deepEqual(resolveLink("MAILTO:a@b.c", c), { href: "MAILTO:a@b.c", isExternal: false });
+});
+
+const UNSAFE = [
+  "javascript:alert(1)",
+  "JaVaScRiPt:alert(1)",
+  " javascript:alert(1)",
+  "\u0001javascript:alert(1)",
+  "java\tscript:alert(1)",
+  "java\nscript:x",
+  "data:text/html,<script>alert(1)</script>",
+  "DATA:text/html,x",
+  "vbscript:msgbox(1)",
+  "file:///etc/passwd",
+  "tel:+41000",
+  // eslint-disable-next-line sonarjs/no-clear-text-protocols -- a scheme fixture, never fetched
+  "ftp://x",
+  "foo:bar",
+  "blob:https://x/y",
+];
+
+test("every unsafe scheme fails with the repository, the file and the quoted link", () => {
+  const c = ctx("api", "docs/install.md");
+  for (const href of UNSAFE) {
+    assert.throws(
+      () => resolveLink(href, c),
+      (e: unknown) =>
+        e instanceof UnsafeLinkError &&
+        e.message ===
+          `lorenzh/pulse-api docs/install.md: unsafe link ${JSON.stringify(href)}: only http:, https:, mailto: and in-site links are allowed`,
+      JSON.stringify(href),
+    );
+  }
+});
+
+test("an unknown repository key names itself in the unsafe-link error", () => {
+  assert.throws(
+    () => resolveLink("javascript:x", ctx("gone", "docs/a.md")),
+    /^UnsafeLinkError: gone docs\/a\.md: unsafe link "javascript:x"/,
+  );
 });
 
 test("anchors are checked against the target's heading ids", () => {
