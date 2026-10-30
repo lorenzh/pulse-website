@@ -56,6 +56,15 @@ test("copy slots hold the commands without prompt, output or comments", () => {
   assert.equal(doc.html.match(/has-copy/g)?.length, 1);
 });
 
+test("a shell-tagged block that only shows an HTTP response gets no copy slot", () => {
+  const doc = renderMarkdown(
+    '# T\n\n```bash\nHTTP/1.1 200 OK\nContent-Type: application/json\n\n{"status":"ok"}\n```\n\n```sh\ncurl localhost\n```\n',
+    keep,
+  );
+  assert.equal(doc.html.match(/data-island="copy-button"/g)?.length, 1);
+  assert.match(doc.html, /data-copy="curl localhost"/);
+});
+
 test("links go through the resolver; external ones get rel=noopener", () => {
   const doc = renderMarkdown(
     "# T\n\n[a](x.md) [b](https://example.com) ![alt](pic.png)\n",

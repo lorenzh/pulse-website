@@ -19,8 +19,9 @@ function endsWithContinuation(line: string): boolean {
  * - With at least one `$ ` line, the lines with the prompt are the commands (prompt removed).
  *   Lines after a command without a prompt are output and skipped, except `\` continuation
  *   lines and heredoc bodies, which stay with their command.
- * - Without a prompt, a `console` block is output only; a `bash`, `sh` or `shell` block is all
- *   commands.
+ * - Without a prompt, a `console` block is output only; a `bash`, `sh` or `shell` block counts
+ *   only when every command line looks like a command (see `looksLikeCommand`), so an output-only
+ *   block (an HTTP response, a log) gets no button.
  * - Comment lines (`#`) and blank lines are never copied.
  */
 export function copyableCommands(language: string | undefined, code: string): string | undefined {
@@ -38,10 +39,29 @@ export function copyableCommands(language: string | undefined, code: string): st
     }
     const text = prompted ? commandOf(line) : line;
     if (text === undefined || text.trim() === "" || text.trimStart().startsWith("#")) continue;
+    if (!prompted && !looksLikeCommand(text)) return undefined;
     out.push(text);
     open = { continuing: endsWithContinuation(text), heredoc: HEREDOC.exec(text)?.[2] };
   }
   return out.length > 0 ? out.join("\n") : undefined;
+}
+
+// A command starts with a lowercase program name or path (`curl`, `./run`, `~/bin/x`), optionally
+// after `NAME=value` assignments, or is only assignments (alone or ending in a `\` continuation).
+// Output such as `HTTP/1.1 200 OK`, `{"ok":true}`, `Started` or `200` does not.
+const ASSIGN = /^[A-Za-z_]\w*=(?:"[^"]*"|'[^']*'|\S*)/;
+const PROGRAM = /^[a-z_.~/][\w.~/+-]*(?:\s|$)/;
+
+/** Whether an unprompted line looks like a shell command rather than output. */
+export function looksLikeCommand(line: string): boolean {
+  let rest = line.trimStart();
+  let assigned = false;
+  for (let m = ASSIGN.exec(rest); m; m = ASSIGN.exec(rest)) {
+    rest = rest.slice(m[0].length).trimStart();
+    assigned = true;
+  }
+  if (rest === "\\") return true;
+  return rest === "" ? assigned : PROGRAM.test(rest);
 }
 
 /** What is still open after a command line: a `\` continuation or a heredoc waiting for its end. */

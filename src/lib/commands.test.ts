@@ -53,3 +53,23 @@ test("a heredoc body stays with its command, including comment-like lines", () =
 test("CRLF line endings are handled", () => {
   assert.equal(copyableCommands("sh", "ls\r\npwd\r\n"), "ls\npwd");
 });
+
+test("an unprompted shell block that is only output gets no button", () => {
+  // The review case: a `bash` block that shows only an HTTP response.
+  const response = 'HTTP/1.1 200 OK\nContent-Type: application/json\n\n{"status":"ok"}';
+  assert.equal(copyableCommands("bash", response), undefined);
+  assert.equal(copyableCommands("sh", "Started\nHealthy"), undefined);
+  assert.equal(copyableCommands("sh", "ls\n200"), undefined);
+});
+
+test("unprompted command lines: programs, paths and env assignments", () => {
+  assert.equal(copyableCommands("sh", "PORT=9000 A=1 npm start"), "PORT=9000 A=1 npm start");
+  assert.equal(copyableCommands("sh", "./run.sh\n~/bin/x -v"), "./run.sh\n~/bin/x -v");
+  assert.equal(copyableCommands("bash", "export A=1"), "export A=1");
+});
+
+test("assignment-only lines that continue to a command are commands", () => {
+  const code = 'A="x y" \\\nB=./b \\\nnpm start';
+  assert.equal(copyableCommands("sh", code), code);
+  assert.equal(copyableCommands("sh", "A=1"), "A=1");
+});

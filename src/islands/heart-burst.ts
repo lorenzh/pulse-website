@@ -1,5 +1,7 @@
 // The heart of the open-source card: eight particles per burst, on hover and on focus.
 // Particles are aria-hidden spans animated with transform and opacity only (see components.css).
+// Reduced motion is checked at each burst, so a switch while the page is open takes effect at once:
+// the heart only fills.
 import { visualRandom } from "../lib/random.ts";
 
 const PARTICLES = 8;
@@ -27,13 +29,14 @@ function burst(heart: HTMLElement, live: Set<HTMLElement>): void {
 
 function setup(card: HTMLElement): void {
   const heart = card.querySelector<HTMLElement>(".heart");
-  if (!heart || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  if (!heart) return;
+  const motion = matchMedia("(prefers-reduced-motion: reduce)");
   const live = new Set<HTMLElement>();
   let armed = true;
   const fire = (): void => {
     if (!armed) return;
     armed = false;
-    burst(heart, live);
+    if (!motion.matches) burst(heart, live);
   };
   const clear = (): void => {
     for (const particle of live) particle.remove();
@@ -52,6 +55,9 @@ function setup(card: HTMLElement): void {
   // A hidden tab stops the animation: drop the particles instead of waiting for their timers.
   document.addEventListener("visibilitychange", () => {
     if (document.hidden) clear();
+  });
+  motion.addEventListener("change", () => {
+    if (motion.matches) clear();
   });
 }
 

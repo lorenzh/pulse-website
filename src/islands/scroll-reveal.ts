@@ -1,8 +1,11 @@
 // Scroll-in for Home and Hosted. The inline head script sets `js-reveal` on <html> only when
 // IntersectionObserver exists and motion is allowed; without it every item is simply visible.
-// One observer serves all items; each item is unobserved after its first hit.
+// One observer serves all items; each item is unobserved after its first hit. An item that is
+// visible once (revealed, failsafe, reduced motion) is marked `is-in` and never animates again.
 
 const STAGGER_MS = 100;
+// The CSS failsafe (components.css, `reveal-failsafe`) shows hidden items 3 s after load.
+const FAILSAFE_MS = 3000;
 
 function reveal(): void {
   if (!document.documentElement.classList.contains("js-reveal")) return;
@@ -41,6 +44,18 @@ function reveal(): void {
     { threshold: 0.15 },
   );
   for (const item of later) observer.observe(item);
+  const showAll = (): void => {
+    for (const item of pending) show(item, undefined);
+  };
+  window.setTimeout(showAll, Math.max(0, FAILSAFE_MS - performance.now()));
+  const motion = matchMedia("(prefers-reduced-motion: reduce)");
+  // Reduced motion removes every animation; without `is-instant` a finished reveal would restart
+  // when it is switched off again.
+  motion.addEventListener("change", () => {
+    if (!motion.matches) return;
+    showAll();
+    for (const item of items) item.classList.add("is-in", "is-instant");
+  });
 }
 
 reveal();

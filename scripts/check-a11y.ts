@@ -324,7 +324,112 @@ async function checkMotionPages(browser: Browser, theme: "light" | "dark"): Prom
   await checkReveal(page, where);
   await checkPreview(page, where);
   await checkHeart(page, where);
+  if (theme === "light") {
+    await checkRevealOnce(page, where);
+    await checkMotionSwitch(page, where);
+  }
   await context.close();
+}
+
+/** Lowest opacity of any scroll-in item over `ms`, sampled every frame. */
+async function lowestRevealOpacity(page: Page, ms: number): Promise<number> {
+  return page.evaluate(
+    (duration) =>
+      new Promise<number>((resolve) => {
+        let low = 1;
+        const end = performance.now() + duration;
+        const sample = (): void => {
+          for (const el of document.querySelectorAll<HTMLElement>("[data-reveal]"))
+            low = Math.min(low, Number(getComputedStyle(el).opacity));
+          if (performance.now() < end) requestAnimationFrame(sample);
+          else resolve(low);
+        };
+        sample();
+      }),
+    ms,
+  );
+}
+
+/** An item shown by the 3 s failsafe must not reveal (fade in) again when scrolled to. */
+async function checkRevealOnce(page: Page, where: string): Promise<void> {
+  await page.goto(`${origin}/`);
+  await page.waitForFunction(() => performance.now() > 3300);
+  if ((await lowestRevealOpacity(page, 100)) < 1)
+    fail(where, "scroll-in items are hidden after the 3 s failsafe");
+  await page.evaluate(() => scrollTo(0, document.body.scrollHeight));
+  const low = await lowestRevealOpacity(page, 1000);
+  if (low < 1) fail(where, `a visible scroll-in item animates again on scroll (opacity ${low})`);
+}
+
+async function previewText(page: Page): Promise<string> {
+  return page.evaluate(
+    () => document.querySelector(".mock-state[data-active=true] .mock-summary")?.textContent ?? "",
+  );
+}
+
+async function canvasFrames(page: Page, ms: number): Promise<number> {
+  const read = (): Promise<number> =>
+    page.evaluate(() => (window as unknown as { __frames: number }).__frames);
+  const before = await read();
+  await page.waitForTimeout(ms);
+  return (await read()) - before;
+}
+
+async function heartParticles(page: Page): Promise<number> {
+  await page.locator("#oss a").blur();
+  await page.locator("#oss a").focus();
+  return page.locator(".heart-particle").count();
+}
+
+/** Reduced motion switched on while the page is open stops every effect; off again resumes. */
+async function checkMotionSwitch(page: Page, where: string): Promise<void> {
+  const w = `${where} reduced motion switched on after load`;
+  await page.goto(`${origin}/`);
+  await page.locator(".status-mock").scrollIntoViewIfNeeded();
+  await page.waitForFunction(() => (window as unknown as { __frames: number }).__frames > 2);
+  const fixed = await page.evaluate(
+    () => document.querySelector(".mock-state .mock-summary")?.textContent ?? "",
+  );
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  // The media query `change` event arrives after emulateMedia resolves.
+  try {
+    await page.waitForFunction(() => !document.querySelector("[data-reveal]:not(.is-in)"), null, {
+      timeout: 1000,
+    });
+  } catch {
+    fail(w, "scroll-in items are still waiting to animate");
+  }
+  if ((await canvasFrames(page, 600)) > 1) fail(w, "the canvas keeps animating");
+  if ((await previewText(page)) !== fixed) fail(w, "the status preview is not at its first state");
+  await page.waitForTimeout(5000);
+  if ((await previewText(page)) !== fixed) fail(w, "the status preview keeps cycling");
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  // Items shown before or during reduced motion must not fade in again once it is off.
+  await page.evaluate(() => scrollTo(0, document.body.scrollHeight));
+  if ((await lowestRevealOpacity(page, 800)) < 1)
+    fail(`${where} motion back`, "a scroll-in item animates again");
+  if ((await canvasFrames(page, 600)) < 3)
+    fail(`${where} motion back`, "the canvas does not resume");
+  await page.locator(".status-mock").scrollIntoViewIfNeeded();
+  try {
+    await page.waitForFunction(
+      (was) => {
+        const text = document.querySelector(".mock-state[data-active=true] .mock-summary");
+        return text?.textContent !== was;
+      },
+      fixed,
+      { timeout: 7000 },
+    );
+  } catch {
+    fail(`${where} motion back`, "the status preview does not resume");
+  }
+  await page.goto(`${origin}/hosted/`);
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  const reduced = await heartParticles(page);
+  if (reduced !== 0) fail(w, `the heart burst makes ${reduced} particles`);
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  const back = await heartParticles(page);
+  if (back !== 8) fail(`${where} motion back`, `the heart burst makes ${back} particles, not 8`);
 }
 
 async function checkReveal(page: Page, where: string): Promise<void> {
