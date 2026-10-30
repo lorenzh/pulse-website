@@ -16,6 +16,7 @@ import { startStaticServer } from "../src/build/static-server.ts";
 const TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];
 const THEMES = ["light", "dark"] as const;
 const WIDTHS = [360, 1280] as const;
+const PHONE_WIDTHS = [360, 390] as const;
 const TARGETS =
   "button, summary, input, select, a.btn, a.card-link, .brand, .site-nav a, .footer-nav a, .docs-side a, .toc a, .pager-link, .breadcrumb a, .copy-btn";
 
@@ -177,6 +178,22 @@ async function checkDocsNav(page: Page, where: string): Promise<void> {
   }
   await page.keyboard.press("Space");
   if (!(await becomes(current, "visible"))) fail(where, "docs navigation did not open with Space");
+}
+
+/** No page is wider than a phone viewport: nothing makes the document scroll sideways. */
+async function checkNoOverflow(browser: Browser): Promise<void> {
+  for (const width of PHONE_WIDTHS) {
+    const context = await newContext(browser, { width, theme: "light" });
+    const page = await context.newPage();
+    for (const url of urls) {
+      await page.goto(`${origin}${url}`);
+      await page.locator("main").waitFor();
+      const wide = await page.evaluate(() => document.documentElement.scrollWidth - innerWidth);
+      if (wide > 0)
+        fail(`overflow ${width}px ${url}`, `page is ${wide} px wider than the viewport`);
+    }
+    await context.close();
+  }
 }
 
 async function checkNoScript(browser: Browser): Promise<void> {
@@ -587,6 +604,7 @@ try {
       console.log(`checked ${urls.length} pages: ${where}`);
     }
   }
+  await checkNoOverflow(browser);
   await checkNoScript(browser);
   await checkHoverCss();
   await checkCopyButtons(browser);
