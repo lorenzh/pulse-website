@@ -71,7 +71,7 @@ Nothing about the hosted offer is decided. Prices, limits, regions, trial, avail
 **Links.** A page links only to `http:`, `https:` and `mailto:` URLs and to in-site targets: relative paths, `/…`, `#fragment`, `?query` and `//host`. `src/build/url-safety.ts` decides this. Like a browser, it first strips leading and trailing control characters and spaces and removes every tab, LF and CR, then takes the text before the first `:` (if that comes before any `/`, `?` and `#`) as the scheme, case-insensitive. Every other scheme fails, `javascript:`, `data:`, `vbscript:`, `file:` and `tel:` included. Three places apply it:
 
 - `resolveLink` (docs Markdown, links and images): the build fails with `<owner/repo> <file>: unsafe link "<link>": only http:, https:, mailto: and in-site links are allowed`.
-- `renderSite` (every rendered page, hand-written ones included, after decoding entities such as `&#106;` and `&colon;` once): `<dist file>: unsafe link <tag> <attr>="<value>": …`.
+- `renderSite` (every rendered page, hand-written ones included, after decoding entities such as `&#106;` and `&colon;` once; like the browser, a numeric reference decodes even without its `;`, as in `javascript&#58alert(1)`): `<dist file>: unsafe link <tag> <attr>="<value>": …`.
 - `bun run check:links` on `dist/`: `<file>: unsafe link scheme in <tag> <attr>="<value>"`.
 
 The link is quoted with `JSON.stringify`, so control characters show as `\u0001` or `\t` and the message stays on one line. A docs link with another scheme must be fixed in its source repository.

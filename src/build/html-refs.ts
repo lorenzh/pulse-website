@@ -23,20 +23,24 @@ const NAMED: Record<string, string> = {
   rpar: ")",
 };
 
-function fromCodePoint(code: number, raw: string): string {
-  return Number.isFinite(code) && code >= 0 && code <= 0x10ffff ? String.fromCodePoint(code) : raw;
+/** Numeric references the HTML parser replaces with U+FFFD: zero, surrogates and out of range. */
+function fromCodePoint(code: number): string {
+  const invalid = !Number.isFinite(code) || code === 0 || code > 0x10ffff;
+  const surrogate = code >= 0xd800 && code <= 0xdfff;
+  return invalid || surrogate ? "\uFFFD" : String.fromCodePoint(code);
 }
 
 /**
  * Decodes an attribute value once, like the browser: `&amp;`, `&quot;`, numeric references and the
- * named references that can hide a URL scheme. Any other `&name;` stays as it is.
+ * named references that can hide a URL scheme. The browser decodes a numeric reference even without
+ * its `;` (`javascript&#58alert(1)`), so the `;` is optional there. Any other `&name;` stays as it is.
  */
 export function decode(value: string): string {
   return value.replace(
-    /&(?:#(\d+)|#x([\da-f]+)|([a-z]+));/gi,
+    /&(?:#(\d+);?|#x([\da-f]+);?|([a-z]+);)/gi,
     (raw, dec: string | undefined, hex: string | undefined, name: string | undefined) => {
-      if (dec !== undefined) return fromCodePoint(Number.parseInt(dec, 10), raw);
-      if (hex !== undefined) return fromCodePoint(Number.parseInt(hex, 16), raw);
+      if (dec !== undefined) return fromCodePoint(Number.parseInt(dec, 10));
+      if (hex !== undefined) return fromCodePoint(Number.parseInt(hex, 16));
       return NAMED[(name ?? "").toLowerCase()] ?? raw;
     },
   );

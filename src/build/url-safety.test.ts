@@ -91,6 +91,24 @@ test("unsafeRefs finds unsafe values after decoding the attribute once", () => {
   );
 });
 
+test("unsafeRefs decodes numeric references without a closing semicolon, like the browser", () => {
+  const html = [
+    '<a href="javascript&#58alert(1)">1</a>',
+    '<a href="javascript&#0058alert(1)">2</a>',
+    '<a href="javascript&#x3A//%0aalert(1)">3</a>',
+    '<a href="&#106avascript:x">4</a>',
+  ].join("");
+  assert.deepEqual(
+    unsafeRefs(html).map((r) => `${r.tag} ${r.attr}=${r.value}`),
+    [
+      "a href=javascript:alert(1)",
+      "a href=javascript:alert(1)",
+      "a href=javascript://%0aalert(1)",
+      "a href=javascript:x",
+    ],
+  );
+});
+
 test("the error is named", () => {
   assert.equal(new UnsafeLinkError("x").name, "UnsafeLinkError");
 });
