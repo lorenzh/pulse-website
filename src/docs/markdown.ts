@@ -1,4 +1,5 @@
 import { Marked, Renderer, type Tokens } from "marked";
+import { copyableCommands } from "../lib/commands.ts";
 import { escapeHtml } from "./escape.ts";
 import { highlight } from "./highlight.ts";
 import type { ResolvedLink } from "./links.ts";
@@ -88,10 +89,15 @@ export function renderMarkdown(
         const language = (lang ?? "").split(/\s/)[0] || undefined;
         const label = codeLabel(language);
         const langClass = language ? ` class="language-${escapeHtml(language)}"` : "";
+        // Only command blocks get a copy button; the text to copy is fixed here, at build time.
+        const commands = copyableCommands(language, text);
+        const slot =
+          commands === undefined
+            ? ""
+            : `<span class="copy-slot" data-island="copy-button" data-copy="${escapeHtml(commands)}"></span>`;
         return (
-          `<div class="code-block"><pre class="code" tabindex="0" role="region" aria-label="${label}">` +
-          `<code${langClass}>${highlight(text, language)}</code></pre>` +
-          `<span class="copy-slot" data-island="copy-button"></span></div>\n`
+          `<div class="code-block${commands === undefined ? "" : " has-copy"}"><pre class="code" tabindex="0" role="region" aria-label="${label}">` +
+          `<code${langClass}>${highlight(text, language)}</code></pre>${slot}</div>\n`
         );
       },
       table(this: Renderer, token: Tokens.Table): string {

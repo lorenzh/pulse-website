@@ -20,21 +20,35 @@ Bun 1.4.0 (package manager, runtime and test runner).
 
 ## Layout
 
-| Path                            | Content                                                                                         |
-| ------------------------------- | ----------------------------------------------------------------------------------------------- |
-| `src/content/`                  | Hand-written content: home, hosted, 404, illustrations, `facts.ts` (CC BY 4.0)                  |
-| `src/components/`               | Document, header, footer, docs page (TSX)                                                       |
-| `src/islands/`                  | The only code shipped to the browser (Preact): theme toggle, menu, docs navigation, copy button |
-| `src/docs/`                     | Docs pipeline: config, fetch and cache, Markdown renderer, link rewriting, nav, bump            |
-| `src/build/`                    | Meta tags, sitemap, theme script, tokens CSS, link and budget checks, static server             |
-| `src/styles/`                   | CSS; `tokens.css` is generated from `design/losoft-tokens.json`                                 |
-| `scripts/`                      | `build.ts`, `bump-docs.ts`, `check-links.ts`, `check-budget.ts`, `check-a11y.ts`, `tokens.ts`   |
-| `docs.config.json`              | The pinned SHAs and the file list of every docs repo                                            |
-| `budget.json`, `site.config.ts` | Size budget; site URL                                                                           |
-| `test/fixtures/`                | Copies of pinned upstream files used by the facts test                                          |
-| `dist/`                         | Build output (ignored)                                                                          |
+| Path                            | Content                                                                                                                                                       |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/content/`                  | Hand-written content: home, hosted, 404, illustrations, `facts.ts` (CC BY 4.0)                                                                                |
+| `src/components/`               | Document, header, footer, docs page (TSX)                                                                                                                     |
+| `src/islands/`                  | The only code shipped to the browser. Preact: theme toggle, menu, docs navigation, copy button. Vanilla: network canvas, live preview, scroll-in, heart burst |
+| `src/lib/`                      | Pure, tested logic: node placement (`network.ts`), frame throttle, command extraction, preview clock                                                          |
+| `src/docs/`                     | Docs pipeline: config, fetch and cache, Markdown renderer, link rewriting, nav, bump                                                                          |
+| `src/build/`                    | Meta tags, sitemap, theme script, tokens CSS, link and budget checks, static server                                                                           |
+| `src/styles/`                   | CSS; `tokens.css` is generated from `design/losoft-tokens.json`                                                                                               |
+| `scripts/`                      | `build.ts`, `bump-docs.ts`, `check-links.ts`, `check-budget.ts`, `check-a11y.ts`, `tokens.ts`                                                                 |
+| `docs.config.json`              | The pinned SHAs and the file list of every docs repo                                                                                                          |
+| `budget.json`, `site.config.ts` | Size budget; site URL                                                                                                                                         |
+| `test/fixtures/`                | Copies of pinned upstream files used by the facts test                                                                                                        |
+| `dist/`                         | Build output (ignored)                                                                                                                                        |
 
 The server render uses real React (`renderToStaticMarkup`); `react` is aliased to `preact/compat` only in the island bundles. Every page renders without JavaScript. Fonts are the two `@fontsource-variable` packages, latin subset files only, copied to `dist/assets/fonts/` with our own `@font-face`.
+
+## Spacing, motion and effects (Home and Hosted)
+
+- **Spacing:** `--section-space: clamp(64px, 8vw, 128px)` sits between sections (half above, half below each); no rules or `<hr>` between sections. Motion tokens (`--ease`, `--dur-reveal`, `--dur-lift`, `--dur-underline`, `--ease-spring`) and the canvas colours (`--net-line`, `--net-node`, `--net-pulse`, `--net-pulse2`) live in `design/losoft-tokens.json` and are generated into `tokens.css`.
+- **Scroll-in:** the inline head script sets `js-reveal` on `<html>` only if `IntersectionObserver` exists and `prefers-reduced-motion` is not `reduce`. Only then are `[data-reveal]` items hidden (opacity and `translateY(32px)`), and a CSS failsafe shows them after 3 s if the script never runs. `scroll-reveal.ts` uses one observer (`threshold: 0.15`), unobserves after the first hit, staggers siblings by 100 ms and shows items already in view, or already scrolled past, at once.
+- **Network canvas:** `network-canvas.ts` draws a fixed, `aria-hidden`, pointer-less canvas below the content. Placement (receivers 280 px, senders 60 px apart; 168 and 36 px floor on phones; angle between links at least 20°, 15° at nodes with 12 or more links; links that break the angle rule are dropped), pulse timing and the 33 ms frame cap are pure code in `src/lib/` with tests. Sizes are measured on resize only, theme colours on theme change only. The loop stops while the tab is hidden or the canvas is off screen; reduced motion draws one static frame. It starts after `load`, when the browser is idle. Without JavaScript there is no canvas content.
+- **Canvas contrast:** the canvas layers are very faint on purpose. `src/build/contrast.test.ts` stacks a link, a node and a pulse of either colour over `--bg` in both themes and requires `--text`, `--lead`, `--muted` and `--accent-text` to stay at 4.5:1 or better (worst case 4.6:1; alphas 0.04, 0.05, 0.06). Axe cannot see text over a canvas, so this computation is the guard.
+- **Outline button:** the curtain `.fill` carries a second copy of the label in `--on-strong` and is clipped with `clip-path`, so every glyph is `--text` on `--bg` (light 14.1:1, dark 11.5:1) or `--on-strong` on `--accent` (light 4.92:1, dark 6.92:1). No frame mixes the two. Plain `--text` on `--accent` would fail (2.87:1 light, 1.66:1 dark), which is why the curtain does not scale a single label.
+- **Live preview:** `live-preview.ts` swaps two snapshots in one grid cell (every 4 s, "ago" counter every second, 600 ms crossfade). Only the visible one is exposed; the other has `aria-hidden`. Timers stop while hidden or off screen. Without JavaScript or with reduced motion the first state stays.
+- **Heart burst:** the open-source card on Hosted (`heart-burst.ts`) makes 8 `aria-hidden` particles per burst on `pointerenter` (hover media) and `focusin`, re-armed on leave; the card's link makes focus reachable. Reduced motion: the heart only fills.
+- **Hover rule:** every `:hover` rule sits in `@media (hover: hover)`; focus effects stay outside it. `src/build/hover-scan.ts` is tested on the sources, and `check:a11y` scans the built CSS. Docs sidebar links keep only a colour transition.
+- **Reduced motion:** one block in `base.css` switches off every animation and transition.
+- **Docs copy buttons:** `src/lib/commands.ts` decides at build time which fenced blocks are command blocks (`bash`, `sh`, `shell`, `console` with a `$ ` line, or a shell block of commands only) and what is copied (prompt removed; output and `#` comments skipped; `\` continuations and heredocs kept). Only those blocks get the `copy-button` island, so other pages ship none.
 
 ## How the docs are pinned
 
@@ -50,7 +64,7 @@ Every fact on the home page is a constant in `src/content/facts.ts` with its sou
 
 ## Hosted page placeholders
 
-Nothing about the hosted offer is decided. Prices, limits, regions, trial, availability, data location, open-source terms and the status URL are shown as marked placeholders such as `[PRICE]`, `[REGIONS]`, `[TRIAL]`, `[DATA_LOCATION]`, `[OSS_TERMS]`, `[STATUS_URL]`, `[AVAILABILITY]` and `[LIMIT]`. The waitlist form is disabled, has no `action` and sends nothing. A test fails if the built page contains a currency sign, a price, `status.losoft.dev` or a form action. A person replaces the placeholders when the offer exists.
+Nothing about the hosted offer is decided. Prices, limits, regions, trial, availability, data location, open-source terms and the status URL are shown as marked placeholders such as `[PRICE]`, `[REGIONS]`, `[TRIAL]`, `[DATA_LOCATION]`, `[OSS_TERMS]`, `[STATUS_URL]`, `[AVAILABILITY]`, `[LIMIT]`, `[DISCOUNT]`, `[REGION]`, `[BACKUP REGION]` and `[RETENTION]`, with the note "Planned offer, details not final" above the plans. The waitlist form is disabled, has no `action` and sends nothing. A test fails if the built page contains a currency sign, a price, `status.losoft.dev` or a form action. A person replaces the placeholders when the offer exists.
 
 ## Site URL and meta
 

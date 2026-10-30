@@ -14,6 +14,10 @@ beforeAll(async () => {
         "menu-toggle": "/b.js",
         "docs-nav": "/c.js",
         "copy-button": "/d.js",
+        "network-canvas": "/e.js",
+        "live-preview": "/f.js",
+        "scroll-reveal": "/g.js",
+        "heart-burst": "/h.js",
       },
     },
   });
@@ -47,6 +51,10 @@ test("commercial facts are visibly marked placeholders", () => {
     "NETWORK_INDEPENDENCE",
     "OPERATION",
     "PARITY",
+    "DISCOUNT",
+    "REGION",
+    "BACKUP REGION",
+    "RETENTION",
   ]) {
     assert.ok(hosted.includes(`<mark class="placeholder">[${name}]</mark>`), name);
   }
@@ -82,12 +90,14 @@ test("every hosted promise carries a placeholder", () => {
   assert.ok(cells.length >= 6, "comparison rows");
 
   const included = between(hosted, /<ul class="feature-grid">/, "</ul>");
-  const cards = included.split('<li class="card">').slice(1);
+  const cards = included.split('<li class="card" data-reveal="true">').slice(1);
   assert.ok(cards.length >= 4, "included cards");
   cells.push(...cards);
 
   const plans = between(hosted, /<ul class="plan-grid">/, '<div id="oss"');
-  const planItems = plans.split(/<li class="card plan(?: plan-featured)?">/).slice(1);
+  const planItems = plans
+    .split(/<li class="card plan(?: plan-featured)?" data-reveal="true">/)
+    .slice(1);
   let items = 0;
   for (const plan of planItems) {
     if (!plan.includes('<h3 class="t-h3">Self-hosted</h3>')) {
@@ -103,4 +113,31 @@ test("every hosted promise carries a placeholder", () => {
   for (const cell of cells) {
     assert.ok(cell.includes(mark), `unmarked hosted promise: ${cell.slice(0, 120)}`);
   }
+});
+
+test("the plans carry the planned-offer note and planned tags, and only placeholders", () => {
+  const plans = hosted.slice(hosted.indexOf('id="plans"'));
+  assert.ok(plans.indexOf("Planned offer, details not final") < plans.indexOf("plan-grid"));
+  assert.ok((hosted.match(/<span class="tag plan-tag">planned<\/span>/g) ?? []).length >= 3);
+  assert.match(hosted, /<span class="tag plan-tag">placeholder<\/span>/);
+  // Every place for a region, backup region, retention and discount is a placeholder token.
+  assert.doesNotMatch(hosted, /\b\d+\s?(?:days?|months?|years?|GB|TB)\b/i);
+});
+
+test("the open-source card has the heart, a focusable link and the island slot", () => {
+  assert.match(hosted, /id="oss"[^>]*data-island="heart-burst"/);
+  assert.match(hosted, /class="heart"[^>]*aria-hidden="true"/);
+  assert.match(hosted, /<a class="text-link" href="#faq">/);
+  assert.match(hosted, /id="faq"/);
+});
+
+test("Home and Hosted ship the canvas and scroll-in slots; the header has the waitlist button", () => {
+  assert.match(
+    hosted,
+    /<canvas class="net-canvas" aria-hidden="true" data-island="network-canvas">/,
+  );
+  assert.match(hosted, /data-island="scroll-reveal"/);
+  const header = hosted.slice(hosted.indexOf("<header"), hosted.indexOf("</header>"));
+  assert.match(header, /Join the waitlist/);
+  assert.doesNotMatch(header, /github\.com/);
 });

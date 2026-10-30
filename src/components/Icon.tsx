@@ -24,12 +24,21 @@ const PATHS = {
     '<rect x="2" y="3" width="20" height="8" rx="2"></rect><rect x="2" y="13" width="20" height="8" rx="2"></rect><path d="M6 7h.01M6 17h.01"></path>',
   heart:
     '<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.5 1-1.1a5.5 5.5 0 0 0 0-7.8z"></path>',
+  copy: '<rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>',
   chevron: '<path d="m6 9 6 6 6-6"></path>',
 } as const;
 
 export type IconName = keyof typeof PATHS;
 
-export function Icon({ name, size = 18 }: { name: IconName; size?: number }) {
+export function Icon({
+  name,
+  size = 18,
+  className,
+}: {
+  name: IconName;
+  size?: number;
+  className?: string;
+}) {
   return (
     <svg
       width={size}
@@ -41,6 +50,7 @@ export function Icon({ name, size = 18 }: { name: IconName; size?: number }) {
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden="true"
+      className={className}
       focusable="false"
       // biome-ignore lint/security/noDangerouslySetInnerHtml: constant icon paths above
       dangerouslySetInnerHTML={{ __html: PATHS[name] }}

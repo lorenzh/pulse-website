@@ -3,7 +3,18 @@ import { cp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { build, transform } from "esbuild";
 
-export const ISLANDS = ["theme-toggle", "menu-toggle", "docs-nav", "copy-button"] as const;
+/** Island name -> entry file in src/islands. Preact islands are .tsx; the others are tiny vanilla modules. */
+export const ISLAND_ENTRIES: Record<string, string> = {
+  "theme-toggle": "theme-toggle.tsx",
+  "menu-toggle": "menu-toggle.tsx",
+  "docs-nav": "docs-nav.tsx",
+  "copy-button": "copy-button.tsx",
+  "network-canvas": "network-canvas.ts",
+  "live-preview": "live-preview.ts",
+  "scroll-reveal": "scroll-reveal.ts",
+  "heart-burst": "heart-burst.ts",
+};
+export const ISLANDS = Object.keys(ISLAND_ENTRIES);
 
 const CSS_FILES = [
   "src/styles/tokens.css",
@@ -43,7 +54,7 @@ export async function buildIslands(root: string, dist: string): Promise<Record<s
   const outdir = path.join(dist, "assets/js");
   await rm(outdir, { recursive: true, force: true });
   const result = await build({
-    entryPoints: ISLANDS.map((name) => path.join(root, `src/islands/${name}.tsx`)),
+    entryPoints: Object.values(ISLAND_ENTRIES).map((file) => path.join(root, "src/islands", file)),
     outdir,
     entryNames: "[name]-[hash]",
     chunkNames: "chunk-[hash]",
@@ -68,7 +79,7 @@ export async function buildIslands(root: string, dist: string): Promise<Record<s
   const islands: Record<string, string> = {};
   for (const [out, meta] of Object.entries(result.metafile.outputs)) {
     if (!meta.entryPoint) continue;
-    const name = path.basename(meta.entryPoint, ".tsx");
+    const name = path.basename(meta.entryPoint).replace(/\.tsx?$/, "");
     islands[name] = `/assets/js/${path.basename(out)}`;
   }
   return islands;

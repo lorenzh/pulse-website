@@ -1,30 +1,49 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { Icon } from "../components/Icon.tsx";
 import { mountIslands } from "./mount.tsx";
 
 type CopyState = "idle" | "done" | "failed";
 
-const LABEL: Record<CopyState, string> = { idle: "Copy", done: "Copied", failed: "Copy failed" };
+const TIP: Record<CopyState, string> = { idle: "", done: "Copied", failed: "Copy blocked" };
+/** How long the tooltip and the check icon stay. */
+const RESET_MS = 1500;
 
-function CopyButton() {
+function CopyButton({ slot }: { slot: HTMLElement }) {
   const [state, setState] = useState<CopyState>("idle");
-  const copy = async (event: { currentTarget: HTMLButtonElement }): Promise<void> => {
-    const code = event.currentTarget.closest(".code-block")?.querySelector("code")?.textContent;
+  // The tooltip resets after 1.5 s; a hidden tab resets it at once instead of keeping a timer.
+  useEffect(() => {
+    if (state === "idle") return;
+    const reset = (): void => setState("idle");
+    const timer = setTimeout(reset, RESET_MS);
+    const onVisibility = (): void => {
+      if (document.hidden) reset();
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
+  }, [state]);
+  const copy = async (): Promise<void> => {
     try {
-      await navigator.clipboard.writeText(code ?? "");
+      await navigator.clipboard.writeText(slot.dataset.copy ?? "");
       setState("done");
     } catch {
       setState("failed");
     }
-    setTimeout(() => setState("idle"), 2000);
   };
   return (
     <>
-      <button type="button" className="copy-btn" onClick={copy}>
-        {LABEL[state]}
-        <span className="sr-only"> code to clipboard</span>
+      <button
+        type="button"
+        className={`copy-btn${state === "done" ? " is-done" : ""}`}
+        aria-label="Copy commands"
+        onClick={copy}
+      >
+        <Icon name={state === "done" ? "check" : "copy"} size={18} />
       </button>
-      <span className="sr-only" role="status">
-        {state === "idle" ? "" : LABEL[state]}
+      <span className="copy-tip" role="status" data-show={state !== "idle"}>
+        {TIP[state]}
       </span>
     </>
   );
