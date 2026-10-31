@@ -61,9 +61,13 @@ function scriptSources(policy: string): string[] {
   return directive ? directive.slice(1) : [];
 }
 
+/**
+ * A meta tag the browser applies as a CSP. Chromium compares `http-equiv` ASCII case-insensitively
+ * and does not trim it, so `" Content-Security-Policy"` is no CSP and does not count as one.
+ */
 function isCspMeta({ tag, attrs }: StartTag): boolean {
   const equiv = attrs["http-equiv"];
-  return tag === "meta" && equiv?.trim().toLowerCase() === "content-security-policy";
+  return tag === "meta" && equiv !== undefined && asciiLower(equiv) === "content-security-policy";
 }
 
 const DOCTYPE = /<!doctype[^>]*>/iy;
@@ -113,7 +117,8 @@ function placementProblems(first: StartTag | undefined, metas: StartTag[]): stri
 const SCRIPT_START = /<script(?=[\t\n\f\r />])/gi;
 
 /**
- * The text of every inline script (one without `src`), failing closed. Every script start tag the
+ * The text of every inline script, failing closed. A script is external only if it has `src` and
+ * no text: in SVG `src` means nothing and the browser runs the text inline. Every script start tag the
  * browser reads matches SCRIPT_START, and its attributes are read like the tokenizer, so no real
  * inline script is missed. Matches the browser does not see as tags (in a comment, an attribute
  * value, RCDATA, raw text or script text) count as well: they can only add a problem, and a fake
@@ -125,9 +130,10 @@ function inlineScripts(html: string): string[] {
   const end = new RegExp(SCRIPT_END.source, SCRIPT_END.flags);
   for (const m of html.matchAll(SCRIPT_START)) {
     const { attrs, end: open } = readAttrs(html, m.index + m[0].length);
-    if (attrs.src !== undefined) continue;
     end.lastIndex = open;
-    texts.push(html.slice(open, end.exec(html)?.index ?? html.length));
+    const text = html.slice(open, end.exec(html)?.index ?? html.length);
+    if (attrs.src !== undefined && text === "") continue;
+    texts.push(text);
   }
   return texts;
 }

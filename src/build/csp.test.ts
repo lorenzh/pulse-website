@@ -152,7 +152,8 @@ test("cspProblems is not fooled by tags the browser does not read as tags", () =
     "<noscript><script src=/x.js></noscript><script>alert(1)</script>",
     "<title><script src=/x.js></title><script>alert(1)</script>",
   ]) {
-    assert.match(problemsOf(page(good, body)), /2 inline scripts, expected 1/, body);
+    // The fake `<script src>` has text up to the real script's end tag, so it counts as well.
+    assert.match(problemsOf(page(good, body)), /: [23] inline scripts, expected 1/, body);
   }
   const meta = cspMetaTag();
   const rest = `<meta charSet="utf-8"/>${THEME}</head><body></body></html>`;
@@ -174,4 +175,31 @@ test("cspProblems is not fooled by tags the browser does not read as tags", () =
     "",
   );
   assert.equal(problemsOf(`<head>${meta}${rest}`), "");
+});
+
+test("cspProblems counts only an http-equiv the browser applies, untrimmed", () => {
+  const meta = cspMetaTag();
+  for (const equiv of [
+    " Content-Security-Policy",
+    "Content-Security-Policy ",
+    " Content-Security-Policy",
+    "Content-Security-Policy\t",
+  ]) {
+    const odd = meta.replace('"Content-Security-Policy"', `"${equiv}"`);
+    assert.notEqual(odd, meta);
+    assert.match(problemsOf(page(odd + GOOD_HEAD)), /^a\.html: 0 CSP meta tags, expected 1/, equiv);
+  }
+});
+
+test("cspProblems counts a script with src and text as inline, as SVG runs its text", () => {
+  const good = cspMetaTag() + GOOD_HEAD;
+  for (const body of [
+    '<svg><script src="/x.js">alert(1)</script></svg>',
+    "<math><mi><svg><script src=/x.js>alert(1)</script></svg></mi></math>",
+    '<script src="/x.js"> </script>',
+  ]) {
+    assert.match(problemsOf(page(good, body)), /^a\.html: 2 inline scripts, expected 1$/, body);
+  }
+  // A script with src and no text stays external.
+  assert.equal(problemsOf(page(good, '<svg><script src="/x.js"></script></svg>')), "");
 });
