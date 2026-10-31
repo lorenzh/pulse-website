@@ -14,7 +14,13 @@ services:
         target: /run/pulse/tokens.json
     volumes:
       - api-data:/data
-      - ./compose/checks.json:/config/checks.json:ro
+      # The directory, not the file: a rename over a single-file bind mount (editor save, `sed -i`)
+      # leaves the container with the old inode. Read-only: the API reloads checks.json when it
+      # changes; GET /admin/config still works, but an admin write answers 503. To change checks
+      # through the API, replace `:ro` with a writable mount (needs PULSE_API_ADMIN_TOKENS_FILE; the
+      # directory must be writable by the container user):
+      #   - ./compose:/config
+      - ./compose:/config:ro
     ports:
       - "127.0.0.1:${PULSE_API_PORT:-3000}:3000"
 
@@ -36,6 +42,8 @@ services:
     image: pulse-status:local
     environment:
       PULSE_API_URL: http://api:3000
+      # The stack shows check names; the e2e test reads them. Hidden is the image default since lorenzh/pulse-status#54.
+      PULSE_STATUS_SHOW_CHECKS: "true"
     ports:
       - "${PULSE_STATUS_PORT:-8080}:8080"
     healthcheck:
@@ -60,9 +68,9 @@ services:
   # Demo profile: docker compose --profile demo up demo-status
   demo-init:
     profiles: [demo]
-    image: node:24-alpine
+    image: oven/bun:1.4.0-alpine@sha256:07235578f79ef8c6f97d94aee7938e76f5cdba5f21ae5dbfdd3d3d38058437eb
     restart: "no"
-    command: ["node", "/demo/init.mjs"]
+    command: ["bun", "/demo/init.mjs"]
     volumes:
       - demo-config:/shared
       - ./compose/demo/init.mjs:/demo/init.mjs:ro
@@ -88,8 +96,8 @@ services:
 
   demo-targets:
     profiles: [demo]
-    image: node:24-alpine
-    command: ["node", "/demo/targets.mjs"]
+    image: oven/bun:1.4.0-alpine@sha256:07235578f79ef8c6f97d94aee7938e76f5cdba5f21ae5dbfdd3d3d38058437eb
+    command: ["bun", "/demo/targets.mjs"]
     volumes:
       - ./compose/demo/targets.mjs:/demo/targets.mjs:ro
 
@@ -142,6 +150,8 @@ services:
     image: pulse-status:local
     environment:
       PULSE_API_URL: http://demo-api:3000
+      # Shows the checks list, which carries the latency chart (status reads /latency only then).
+      PULSE_STATUS_SHOW_CHECKS: "true"
     ports:
       - "${PULSE_DEMO_STATUS_PORT:-8081}:8080"
     healthcheck:

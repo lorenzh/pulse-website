@@ -26,6 +26,10 @@ const PATHS = {
     '<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.5 1-1.1a5.5 5.5 0 0 0 0-7.8z"></path>',
   copy: '<rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>',
   chevron: '<path d="m6 9 6 6 6-6"></path>',
+  message:
+    '<path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"></path><path d="M8 12h.01M12 12h.01M16 12h.01"></path>',
+  bars: '<path d="M12 20V10M18 20V4M6 20v-4"></path>',
+  code: '<path d="m16 18 6-6-6-6M8 6l-6 6 6 6"></path>',
 } as const;
 
 export type IconName = keyof typeof PATHS;

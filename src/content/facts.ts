@@ -51,6 +51,7 @@ export const CHECKS_SAMPLE = {
       intervalMs: 10000,
       timeoutMs: 1000,
       latencyObjectiveMs: 500,
+      availabilityTarget: 99.9,
       keyword: "ok",
       retries: 2,
       retryDelayMs: 500,

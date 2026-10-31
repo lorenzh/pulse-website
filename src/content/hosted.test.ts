@@ -115,6 +115,15 @@ test("every hosted promise carries a placeholder", () => {
   }
 });
 
+test("version 28 content: the Team plan lists components, incident updates, feed and badges", () => {
+  const team = between(hosted, /<h3 class="t-h3">Team/, '<h3 class="t-h3">Business');
+  assert.ok(
+    team.includes(
+      'Components, incident updates, feed and badges <mark class="placeholder">[AVAILABILITY]</mark>',
+    ),
+  );
+});
+
 test("the plans carry the planned-offer note and planned tags, and only placeholders", () => {
   const plans = hosted.slice(hosted.indexOf('id="plans"'));
   assert.ok(plans.indexOf("Planned offer, details not final") < plans.indexOf("plan-grid"));
