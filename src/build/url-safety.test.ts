@@ -109,6 +109,19 @@ test("unsafeRefs decodes numeric references without a closing semicolon, like th
   );
 });
 
+test("unsafeRefs reads duplicate attributes and / separators like the browser", () => {
+  const html = [
+    '<a href="javascript:alert(1)" href="/">1</a>',
+    '<a/href="javascript:alert(2)">2</a>',
+    '<a title="t"href="javascript:alert(3)">3</a>',
+    '<a href="/" href="javascript:alert(4)">4</a>',
+  ].join("");
+  assert.deepEqual(
+    unsafeRefs(html).map((r) => `${r.tag} ${r.attr}=${r.value}`),
+    ["a href=javascript:alert(1)", "a href=javascript:alert(2)", "a href=javascript:alert(3)"],
+  );
+});
+
 test("the error is named", () => {
   assert.equal(new UnsafeLinkError("x").name, "UnsafeLinkError");
 });

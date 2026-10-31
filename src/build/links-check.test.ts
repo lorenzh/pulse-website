@@ -106,6 +106,25 @@ test("each unsafe scheme is one unsafe-link problem, not a dangling link", () =>
   }
 });
 
+/** Anchors the browser reads as a javascript: link although the tag is unusual. */
+const UNSAFE_ANCHORS = [
+  '<a href="javascript:alert(1)" href="/">x</a>',
+  '<a/href="javascript:alert(1)">x</a>',
+  '<a title="t"href="javascript:alert(1)">x</a>',
+  "<A HREF=javascript:alert(1)>x</a>",
+  "<a\nhref\n=\n'javascript:alert(1)'>x</a>",
+];
+
+test("the tag is read like the browser: first duplicate wins, / separates attributes", () => {
+  for (const anchor of UNSAFE_ANCHORS) {
+    const report = run({ "index.html": page(anchor) });
+    assert.equal(report.problems.length, 1, anchor);
+    assert.match(report.problems[0] ?? "", /unsafe link scheme in a href="javascript:/, anchor);
+  }
+  const control = run({ "index.html": page('<a href="/" / href="javascript:x">x</a>') });
+  assert.deepEqual(control.problems, []);
+});
+
 test("an unsafe srcset candidate or form action is reported", () => {
   const report = run({
     "index.html": page(

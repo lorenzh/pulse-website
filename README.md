@@ -74,6 +74,8 @@ Nothing about the hosted offer is decided. Prices, limits, regions, trial, avail
 - `renderSite` (every rendered page, hand-written ones included, after decoding entities such as `&#106;` and `&colon;` once; like the browser, a numeric reference decodes even without its `;`, as in `javascript&#58alert(1)`): `<dist file>: unsafe link <tag> <attr>="<value>": …`.
 - `bun run check:links` on `dist/`: `<file>: unsafe link scheme in <tag> <attr>="<value>"`.
 
+The last two read tags as the browser's HTML tokenizer does (`src/build/html-refs.ts`): a `/` or a closing quote also separates attributes (`<a/href=…>`, `<a title="t"href=…>`), names are matched case-insensitively, and of two equal attributes the first counts, as in the browser.
+
 The link is quoted with `JSON.stringify`, so control characters show as `\u0001` or `\t` and the message stays on one line. A docs link with another scheme must be fixed in its source repository.
 
 **Policy.** `src/build/csp.ts` puts this meta tag first in the `<head>` of every page:
