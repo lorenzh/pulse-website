@@ -111,10 +111,10 @@ test("cspProblems ends inline scripts like the browser's tokenizer", () => {
   ]) {
     assert.match(problemsOf(page(good, body)), /^a\.html: 2 inline scripts, expected 1$/, body);
   }
-  // Tags inside script text are text: one more script, not two.
+  // A `<script` inside script text is counted too (failing closed): more scripts, never fewer.
   assert.match(
     problemsOf(page(good, '<script>"<script>x</scripts>"</script>')),
-    /^a\.html: 2 inline scripts, expected 1$/,
+    /^a\.html: 3 inline scripts, expected 1$/,
   );
   // A script with src is not inline, whatever its end tag.
   assert.equal(problemsOf(page(good, '<script src="/b.js"></script/>')), "");
@@ -141,4 +141,37 @@ test("cspProblems reads the CSP meta tag like the browser's tag reader", () => {
     /^a\.html: the CSP meta tag is not the first element of <head>$/,
   );
   assert.equal(problemsOf(page(`\n\t${meta}${GOOD_HEAD}`)), "");
+});
+
+test("cspProblems is not fooled by tags the browser does not read as tags", () => {
+  const good = cspMetaTag() + GOOD_HEAD;
+  for (const body of [
+    '<!-- <script src="/x.js"> --><script>alert(1)</script>',
+    '<p title="<script src=/x.js>">x</p><script>alert(1)</script>',
+    "<textarea><script src=/x.js></textarea><script>alert(1)</script>",
+    "<noscript><script src=/x.js></noscript><script>alert(1)</script>",
+    "<title><script src=/x.js></title><script>alert(1)</script>",
+  ]) {
+    assert.match(problemsOf(page(good, body)), /2 inline scripts, expected 1/, body);
+  }
+  const meta = cspMetaTag();
+  const rest = `<meta charSet="utf-8"/>${THEME}</head><body></body></html>`;
+  for (const html of [
+    `<html><!--<head>${meta}--><head>${rest}`,
+    `<!doctype html><!--x--><html><head>${meta}${rest}`,
+    `<html><template><head>${meta}</template><head>${rest}`,
+    `<html><p title="<head>${meta}"><head>${rest}`,
+    `<html>x<head>${meta}${rest}`,
+  ]) {
+    assert.match(problemsOf(html), /0 CSP meta tags|not the first element of <head>/, html);
+  }
+  // A CSP meta tag in a comment is counted too (failing closed).
+  const other = meta.replace("form-action 'none'", "form-action 'self'");
+  assert.match(problemsOf(`<html><head>${other}<!--${meta}-->${rest}`), /2 CSP meta tags/);
+  // The prefix the browser reads: whitespace, doctype, <html> and <head> with any attributes.
+  assert.equal(
+    problemsOf(` \n<!DOCTYPE html>\n<HTML lang="en" data-x="<head>"><HEAD/>\n${meta}${rest}`),
+    "",
+  );
+  assert.equal(problemsOf(`<head>${meta}${rest}`), "");
 });

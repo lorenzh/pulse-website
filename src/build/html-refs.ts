@@ -12,11 +12,12 @@ function isNameEnd(ch: string | undefined): boolean {
   return ch === undefined || isSpace(ch) || ch === "/" || ch === ">" || ch === "=";
 }
 
-function asciiLower(text: string): string {
+export function asciiLower(text: string): string {
   return text.replace(/[A-Z]/g, (c) => c.toLowerCase());
 }
 
-function skipSpace(source: string, from: number): number {
+/** The index of the first character at or after `from` that is not HTML whitespace. */
+export function skipSpace(source: string, from: number): number {
   let i = from;
   while (isSpace(source[i])) i += 1;
   return i;
@@ -45,7 +46,10 @@ export function parseAttrs(source: string, from = 0): Record<string, string> {
 }
 
 /** The attributes from `from` and the index just after the closing `>` (the end if there is none). */
-function readAttrs(source: string, from: number): { attrs: Record<string, string>; end: number } {
+export function readAttrs(
+  source: string,
+  from: number,
+): { attrs: Record<string, string>; end: number } {
   const attrs = new Map<string, string>();
   let i = from;
   while (i < source.length && source[i] !== ">") {
