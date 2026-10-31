@@ -21,8 +21,8 @@ const FEATURES: { icon: IconName; title: string; text: string }[] = [
   },
   {
     icon: "lock",
-    title: "TLS certificates",
-    text: "Days until expiry for every host, with a warning threshold you set.",
+    title: "TLS, TCP, DNS and domains",
+    text: "Certificate and domain expiry, open ports and DNS records, next to every HTTP endpoint.",
   },
   {
     icon: "pulse",
@@ -43,6 +43,21 @@ const FEATURES: { icon: IconName; title: string; text: string }[] = [
     icon: "monitor",
     title: "White-label status page",
     text: "Your name, logo, colours and fonts. Light and dark, accessible, works without tracking.",
+  },
+  {
+    icon: "message",
+    title: "Incident updates",
+    text: "Post what you know, from investigating to resolved. The page, the feed and every channel follow.",
+  },
+  {
+    icon: "bars",
+    title: "Latency and SLOs",
+    text: "Response-time percentiles per HTTP check and availability objectives with an error budget.",
+  },
+  {
+    icon: "code",
+    title: "Checks API",
+    text: "Change checks, components and maintenance over an admin API. No restart, no lost edits.",
   },
   {
     icon: "bell",
@@ -131,9 +146,9 @@ export function HomeContent() {
             Know when it breaks. Tell people <span className="t-accent">when it’s back</span>.
           </h1>
           <p className="t-lead lead">
-            pulse checks HTTP endpoints, TLS certificates and cron jobs from several locations,
-            decides by quorum, and keeps a calm public status page. Incidents reach Slack, Teams,
-            email, a webhook or a file. Self-hosted with one Docker Compose file.
+            pulse checks HTTP endpoints, TLS certificates, ports, DNS, domains and cron jobs from
+            several locations, decides by quorum, and keeps a calm public status page. Incidents
+            reach Slack, Teams, email or a signed webhook. Self-hosted with one Docker Compose file.
           </p>
           <div className="btn-row">
             <ButtonLink

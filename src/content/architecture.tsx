@@ -2,12 +2,12 @@ const SERVICES = [
   {
     name: "pulse-probe",
     badge: "One per location",
-    text: "Runs HTTP and TLS checks on schedule and reloads them from the API.",
+    text: "Runs HTTP, TLS, TCP, DNS and domain checks, reloads them from the API and buffers results while it is away.",
   },
   {
     name: "pulse-api",
     badge: "The source of truth",
-    text: "Stores results in SQLite, applies quorum and maintenance, opens and resolves incidents, takes heartbeat pings.",
+    text: "Stores results in SQLite, applies quorum and maintenance, rolls checks up into components, opens and resolves incidents, takes heartbeat pings and admin changes without a restart.",
   },
   { name: "pulse-status", badge: "Read only", text: "The public page, redacted and cached." },
   {

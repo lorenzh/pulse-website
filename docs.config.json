@@ -2,8 +2,8 @@
   "repos": {
     "api": {
       "repo": "lorenzh/pulse-api",
-      "sha": "a1a78ac807a2825322f153412671a4ee7af2424b",
-      "date": "2026-10-30T04:23:53Z",
+      "sha": "11f555598831ef61f13de40bef5f2da620230c97",
+      "date": "2026-10-31T02:56:24Z",
       "files": [
         "docs/concepts.md",
         "docs/configuration.md",
@@ -17,8 +17,8 @@
     },
     "probe": {
       "repo": "lorenzh/pulse-probe",
-      "sha": "576962c27447014cea10fbbd832e87bd19ac18c3",
-      "date": "2026-10-30T02:37:13Z",
+      "sha": "9674e518f9d60db4a816e8c694b782a616b30dff",
+      "date": "2026-10-31T00:29:21Z",
       "files": [
         "docs/configuration.md",
         "docs/development.md",
@@ -30,8 +30,8 @@
     },
     "status": {
       "repo": "lorenzh/pulse-status",
-      "sha": "5ab29f84f45f88141e1e0ce251d76555c8725d8b",
-      "date": "2026-10-30T05:04:01Z",
+      "sha": "b01a1ab58f62a20bbefa580b2c8ab6570ee246ca",
+      "date": "2026-10-31T03:52:31Z",
       "files": [
         "docs/configuration.md",
         "docs/development.md",
@@ -44,8 +44,8 @@
     },
     "notify": {
       "repo": "lorenzh/pulse-notify",
-      "sha": "f0ed21fa5a25087363c66775bc45e325b73c8bec",
-      "date": "2026-10-30T05:03:57Z",
+      "sha": "584eabd05abcadc8f5a1035307e2c09a7a84c933",
+      "date": "2026-10-30T23:40:49Z",
       "files": [
         "docs/channels.md",
         "docs/channels/email.md",
@@ -63,14 +63,14 @@
     },
     "contract": {
       "repo": "lorenzh/pulse-contract",
-      "sha": "e49492764054d05b09e2e76453e7b963d959357b",
-      "date": "2026-10-30T04:40:23Z",
+      "sha": "ebcbbb613328494185833f7133f1242910986948",
+      "date": "2026-10-30T23:49:40Z",
       "files": ["docs/index.md"]
     },
     "kit": {
       "repo": "lorenzh/pulse-kit",
-      "sha": "72adb59b980e2dd4802a1fb8b28eaa5b43b040fc",
-      "date": "2026-10-29T23:43:46Z",
+      "sha": "6a06ec25d26d90be12eba133972b59077dd0e17d",
+      "date": "2026-10-30T20:10:19Z",
       "files": ["docs/index.md"]
     }
   }

@@ -36,6 +36,80 @@ test("version 27 content: probe token, quorum wording and privacy", () => {
   assert.match(home, /&quot;secret&quot;/);
 });
 
+test("version 28 content: hero, feature cards, icons, architecture and sample", () => {
+  const flat = home.replace(/\s+/g, " ");
+  assert.ok(
+    flat.includes(
+      "pulse checks HTTP endpoints, TLS certificates, ports, DNS, domains and cron jobs from several locations, decides by quorum, and keeps a calm public status page. Incidents reach Slack, Teams, email or a signed webhook. Self-hosted with one Docker Compose file.",
+    ),
+  );
+  assert.ok(!flat.includes("email, a webhook or a file"));
+
+  assert.ok(home.includes('<h3 class="t-h3">TLS, TCP, DNS and domains</h3>'));
+  assert.ok(
+    home.includes(
+      "<p>Certificate and domain expiry, open ports and DNS records, next to every HTTP endpoint.</p>",
+    ),
+  );
+  assert.ok(!home.includes("TLS certificates</h3>"));
+
+  const cards = [
+    [
+      "White-label status page",
+      "Your name, logo, colours and fonts. Light and dark, accessible, works without tracking.",
+    ],
+    [
+      "Incident updates",
+      "Post what you know, from investigating to resolved. The page, the feed and every channel follow.",
+    ],
+    [
+      "Latency and SLOs",
+      "Response-time percentiles per HTTP check and availability objectives with an error budget.",
+    ],
+    [
+      "Checks API",
+      "Change checks, components and maintenance over an admin API. No restart, no lost edits.",
+    ],
+    [
+      "Notifications",
+      "Slack, Microsoft Teams, email, webhooks (optionally HMAC-signed) and a file, with reminders while an incident stays open.",
+    ],
+  ] as const;
+  let last = -1;
+  for (const [title, text] of cards) {
+    const at = home.indexOf(`<h3 class="t-h3">${title}</h3><p>${text}</p>`);
+    assert.ok(at > last, `card order: ${title}`);
+    last = at;
+  }
+
+  for (const path of [
+    '<path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"></path><path d="M8 12h.01M12 12h.01M16 12h.01"></path>',
+    '<path d="M12 20V10M18 20V4M6 20v-4"></path>',
+    '<path d="m16 18 6-6-6-6M8 6l-6 6 6 6"></path>',
+    '<path d="m19 9-5 5-4-4-3 3"></path>',
+  ]) {
+    assert.ok(home.includes(path), path);
+  }
+
+  assert.ok(
+    home.includes(
+      "Runs HTTP, TLS, TCP, DNS and domain checks, reloads them from the API and buffers results while it is away.",
+    ),
+  );
+  assert.ok(
+    home.includes(
+      "Stores results in SQLite, applies quorum and maintenance, rolls checks up into components, opens and resolves incidents, takes heartbeat pings and admin changes without a restart.",
+    ),
+  );
+  assert.match(home, /&quot;availabilityTarget&quot;/);
+
+  const grid = home.slice(
+    home.indexOf('<ul class="feature-grid">'),
+    home.indexOf("</ul>", home.indexOf('<ul class="feature-grid">')),
+  );
+  assert.equal(grid.split('<li class="card" data-reveal="true">').length - 1, 11);
+});
+
 test("the two text links are fit-content links and the rows are centred", () => {
   assert.equal(home.match(/<a class="text-link"/g)?.length, 2);
   assert.match(home, /Read the configuration guide/);

@@ -1,24 +1,24 @@
 # Install
 
-You can run pulse-api with Node directly, as a single Docker image, or as part of the full pulse stack with Docker Compose.
+You can run pulse-api with Bun directly, as a single Docker image, or as part of the full pulse stack with Docker Compose.
 
-## With npm
+## With Bun
 
-You need Node 24 or newer.
+You need Bun 1.4.0.
 
 ```sh
-npm ci
+bun install --frozen-lockfile
 cp checks.example.json checks.json
 cp tokens.example.json tokens.json
 ```
 
-Edit `tokens.json` first. The API rejects the placeholder tokens of the example file. Create a token with `openssl rand -hex 32` (see [Locations and tokens](concepts.md#locations-and-tokens)). Then start the API:
+Edit `tokens.json` first. The API rejects the placeholder tokens of the example file. In `checks.json`, replace the placeholder `secret` of the `nightly-backup` heartbeat check, or remove that check: the API also rejects it. Create a token with `openssl rand -hex 32` (see [Locations and tokens](concepts.md#locations-and-tokens)). Then start the API:
 
 ```sh
-npm start
+bun start
 ```
 
-It listens on port 3000. The database is `./pulse.db`. `node:sqlite` prints an experimental warning on start; this is expected. All settings are in [Configuration](configuration.md).
+It listens on port 3000. The database is `./pulse.db`. All settings are in [Configuration](configuration.md).
 
 Check that it runs:
 
@@ -39,20 +39,20 @@ sed -i.bak "s/^PULSE_PROBE_TOKEN=.*/PULSE_PROBE_TOKEN=$(openssl rand -hex 32)/" 
 docker compose up -d --build
 ```
 
-Open http://localhost:8080. The example check (`compose/checks.json`, only `status-page`) probes the status page itself, so the stack works offline. Its state leaves `unknown` after the first 10 s interval.
+Open http://localhost:8080. The example check (`compose/checks.json`, only `status-page`) probes the status page itself, so the stack works offline. Its state leaves `unknown` after the first 10 s interval. The stack sets `PULSE_STATUS_SHOW_CHECKS=true`, so the status page lists the checks by name; without it, the status image hides them.
 
 Stop the stack with `docker compose down`. The `api-data` and `notify-data` volumes keep the database and the notify ledger for the next start. `docker compose down -v` deletes them.
 
-| Service  | Image                | Port                          | Healthcheck   |
-| -------- | -------------------- | ----------------------------- | ------------- |
-| `api`    | `pulse-api:local`    | `127.0.0.1:3000` (not public) | `GET /readyz` |
-| `probe`  | `pulse-probe:local`  | none                          | none          |
-| `status` | `pulse-status:local` | `8080` (the status page)      | `GET /`       |
-| `notify` | `pulse-notify:local` | none                          | none          |
+| Service  | Image                | Port                          | Healthcheck    |
+| -------- | -------------------- | ----------------------------- | -------------- |
+| `api`    | `pulse-api:local`    | `127.0.0.1:3000` (not public) | `GET /readyz`  |
+| `probe`  | `pulse-probe:local`  | none                          | none           |
+| `status` | `pulse-status:local` | `8080` (the status page)      | `GET /healthz` |
+| `notify` | `pulse-notify:local` | none                          | none           |
 
 The API stays non-public (`127.0.0.1:3000`). Port 8080 of `pulse-status` exposes a filtered, read-only subset of it: `GET /api/uptime`, `/api/checks`, `/api/maintenance` and `/api/incidents?status=open|resolved`. No other API path is proxied. The status page `/` and its static assets are served as well. Check targets, reasons and keywords are hidden by default (`PULSE_STATUS_HIDE_DETAILS`, see the pulse-status docs). If you show details, reasons can still reveal hosts or IPs.
 
-All images run as the non-root `node` user. `status` and `notify` wait for `api` to be healthy. `probe` waits for `api` and `status` to be healthy.
+All images run as the non-root `bun` user. `status` and `notify` wait for `api` to be healthy. `probe` waits for `api` and `status` to be healthy.
 
 ### The `.env` file
 
@@ -76,13 +76,13 @@ The status page is then on http://localhost:8090. The API port (`PULSE_API_PORT`
 
 ### Adding checks
 
-Edit `compose/checks.json` (format: [checks.json](configuration.md#checksjson)). The API reads the file once at start, so restart the API. The probe reloads its checks from the API on its own, within its reload interval:
+Edit `compose/checks.json` (format: [checks.json](configuration.md#checksjson)). The API looks at the file every 5 seconds and applies a change without a restart (see [Operation](operation.md#changing-checks)); `docker compose kill -s HUP api` applies it at once. The probe reloads its checks from the API on its own, within its reload interval:
 
 ```sh
-docker compose restart api
+docker compose kill -s HUP api   # optional: apply now instead of within 5 seconds
 ```
 
-`docker compose up -d` is not a reload step: it does not recreate the API when only the mounted file changed, and the API reads the checks only at start.
+`docker compose up -d` is not a reload step: it does not recreate the API when only the mounted file changed. The stack mounts the directory `compose/` read-only (`./compose:/config:ro`), not the file: a single-file bind mount does not see an editor save by rename or `sed -i`. The directory holds only `checks.json`, `notify.json` and the `demo/` and `e2e/` fixtures, no secrets. The [admin config routes](rest-api.md#admin-config-routes) are off by default (`404` without `PULSE_API_ADMIN_TOKENS_FILE`). With admin tokens, an authenticated `GET /admin/config` answers `200`, but the mount is read-only, so a config write (`POST`, `PUT` or `DELETE` on checks, components or maintenance) that passes the request checks (token, body size, JSON, id, `If-Match`) answers `503`; see [Operation](operation.md#changing-checks) to mount the directory writable.
 
 The compose file has one probe, so one location. A single location decides alone, so a check can open an incident with it. See [Quorum and incidents](concepts.md#quorum-and-incidents). For a second location, add a second probe service with its own `PULSE_LOCATION`, its own token and a matching entry in the tokens config.
 
@@ -97,15 +97,14 @@ The notify config is `compose/notify.json`: one `file` channel that writes `/dat
 ```sh
 docker build --tag pulse-api:local .
 docker run --rm -p 3000:3000 \
-  -v "$PWD/checks.json:/config/checks.json:ro" \
-  -v "$PWD/tokens.json:/config/tokens.json:ro" \
+  -v "$PWD/config:/config:ro" \
   -v pulse-api-data:/data \
   -e PULSE_CHECKS_FILE=/config/checks.json \
   -e PULSE_TOKENS_FILE=/config/tokens.json \
   pulse-api:local
 ```
 
-The image runs as the non-root `node` user with `node src/main.ts`. It owns `/data` (database at `PULSE_DB=/data/pulse.db`), exposes port 3000 and has a healthcheck on `GET /readyz`. It contains no checks or tokens file: mount them.
+The image runs as the non-root `bun` user with `bun src/main.ts`. It owns `/data` (database at `PULSE_DB=/data/pulse.db`), exposes port 3000 and has a healthcheck on `GET /readyz`. It contains no checks or tokens file: mount a directory with `checks.json` and `tokens.json` inside. Do not mount the two files singly: a single-file bind mount keeps the old inode and does not see an atomic replace (editor save, `sed -i`), so hot reload misses the change.
 
 ## Demo profile
 
@@ -128,12 +127,14 @@ Open http://localhost:8081. The `demo-` services have their own volumes and port
 
 | Check             | Target          | Expected state                                    | Appears                                                               |
 | ----------------- | --------------- | ------------------------------------------------- | --------------------------------------------------------------------- |
-| Always healthy    | `/up`           | up                                                | within 10 s                                                           |
+| Always healthy    | `/up`           | up, objective 200 ms                              | within 10 s                                                           |
 | Slow endpoint     | `/slow`         | degraded (answers in 1.5 s, objective 500 ms)     | within 10 s                                                           |
 | Flaky service     | `/flaky`        | down with an open incident, then up and resolved  | down from about 30 s, incident about 15 s later, resolved after 150 s |
 | Database upgrade  | `/maintenance`  | maintenance (current window, target always fails) | within 10 s                                                           |
 | Scheduled upgrade | `/up`           | up, upcoming maintenance window in 30 to 90 min   | within 10 s                                                           |
 | TLS certificate   | `demo-tls:8443` | up, certificate valid for 5 days, `warnDays` 3    | within 10 s                                                           |
+
+`demo-status` sets `PULSE_STATUS_SHOW_CHECKS` to `true`, so the checks list shows the latency chart (p50, p95 and the dotted objective line) for the two HTTP checks with an objective. The API computes the current day from the results at each read, so the chart has data after the first results. On a fresh demo it shows a single day. Earlier days are filled by the hourly rollup once a day has closed.
 
 Times count from the start of `demo-targets`. `demo-init` computes the maintenance windows when it runs, and the API reads them at start only. The windows go stale after 15 minutes. To refresh them, remove the demo containers and volumes as described under cleanup below and start again.
 

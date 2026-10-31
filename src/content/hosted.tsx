@@ -147,6 +147,9 @@ const PLANS: Plan[] = [
       <>
         Slack, Teams, reminders and heartbeats <Placeholder name="AVAILABILITY" />
       </>,
+      <>
+        Components, incident updates, feed and badges <Placeholder name="AVAILABILITY" />
+      </>,
     ],
     cta: { label: "Join the waitlist", href: "#waitlist" },
     featured: true,
