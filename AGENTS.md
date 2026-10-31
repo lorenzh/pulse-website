@@ -49,6 +49,8 @@ pulse-website is the static website of pulse: a home page, docs generated from t
 - Interactive targets are at least 44 × 44 px; colours, sizes and radii come from the tokens (`design/losoft-tokens.json` → `src/styles/tokens.css`).
 - Validate untrusted input at the edge: `docs.config.json`, fetched Markdown, GitHub API answers.
 - Throw only `Error` subclasses with a `name`; never swallow an error silently.
+- Links only with `http:`, `https:`, `mailto:` or in-site targets (`src/build/url-safety.ts`).
+- No inline script besides the hashed theme script, no `style` attributes and no `<style>` elements. Every page keeps the Content-Security-Policy meta tag first in `<head>`; a policy change needs a reason in the pull request.
 
 ## Tests
 

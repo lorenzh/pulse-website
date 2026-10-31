@@ -1,5 +1,6 @@
 import { test } from "bun:test";
 import assert from "node:assert/strict";
+import { UnsafeLinkError, unsafeRefs } from "../build/url-safety.ts";
 import type { DocsConfig } from "./config.ts";
 import { buildDocPages, DocPageError, formatUpdated } from "./page.ts";
 
@@ -63,4 +64,52 @@ test("a missing source or title fails", () => {
 
 test("the updated date is written in full", () => {
   assert.equal(formatUpdated("2026-10-29T23:59:00Z"), "29 October 2026");
+});
+
+// One fixture per unsafe link: marked 18.1.2 turns each into a link or image token (checked with
+// the unsafe-link check removed). Control characters need the angle-bracket destination form.
+const UNSAFE_FIXTURES: [markdown: string, href: string][] = [
+  ["[x](javascript:alert(1))", "javascript:alert(1)"],
+  ["[y](JaVaScRiPt:alert(1))", "JaVaScRiPt:alert(1)"],
+  ["[z](data:text/html,<script>alert(1)</script>)", "data:text/html,<script>alert(1)</script>"],
+  ["[w]( javascript:alert(1))", "javascript:alert(1)"],
+  ["![i](javascript:alert(1))", "javascript:alert(1)"],
+  ["[r][a]\n\n[a]: javascript:alert(1)", "javascript:alert(1)"],
+  ["<javascript:alert(1)>", "javascript:alert(1)"],
+  ["[c](<\u0001javascript:alert(1)>)", "\u0001javascript:alert(1)"],
+  ["[t](<java\tscript:alert(1)>)", "java\tscript:alert(1)"],
+];
+
+for (const [markdown, href] of UNSAFE_FIXTURES) {
+  test(`an unsafe link fails the build: ${JSON.stringify(markdown)}`, () => {
+    const source = { "api:docs/index.md": `# Overview\n\n${markdown}\n` };
+    assert.throws(
+      () => buildDocPages(config, sources(source)),
+      (e: unknown) =>
+        e instanceof UnsafeLinkError &&
+        e.message.startsWith(
+          `lorenzh/pulse-api docs/index.md: unsafe link ${JSON.stringify(href)}:`,
+        ),
+    );
+  });
+}
+
+test("control characters are escaped in the error", () => {
+  const source = { "api:docs/index.md": "# O\n\n[c](<\u0001javascript:alert(1)>)\n" };
+  assert.throws(() => buildDocPages(config, sources(source)), /unsafe link "\\u0001javascript/);
+  const tab = { "api:docs/index.md": "# O\n\n[t](<java\tscript:alert(1)>)\n" };
+  assert.throws(() => buildDocPages(config, sources(tab)), /unsafe link "java\\tscript/);
+});
+
+test("https, mailto, relative and fragment links still build", () => {
+  const source = {
+    "api:docs/index.md":
+      "# Overview\n\n[a](https://x.test/) [b](mailto:a@b.c) [c](install.md) [d](#overview)\n",
+  };
+  const html = buildDocPages(config, sources(source))[0]?.html ?? "";
+  assert.match(html, /href="https:\/\/x\.test\/"/);
+  assert.match(html, /href="mailto:a@b\.c"/);
+  assert.match(html, /href="\/docs\/api\/install\/"/);
+  assert.match(html, /href="#overview"/);
+  assert.deepEqual(unsafeRefs(html), []);
 });

@@ -1,4 +1,5 @@
 import path from "node:path";
+import { isSafeUrl, LINK_RULE, UnsafeLinkError } from "../build/url-safety.ts";
 import type { DocsConfig } from "./config.ts";
 
 export class LinkError extends Error {
@@ -46,6 +47,12 @@ function locate(ctx: LinkContext, target: string): { repoKey: string; file: stri
 }
 
 export function resolveLink(href: string, ctx: LinkContext): ResolvedLink {
+  if (!isSafeUrl(href)) {
+    const repo = ctx.config.repos[ctx.repoKey]?.repo ?? ctx.repoKey;
+    throw new UnsafeLinkError(
+      `${repo} ${ctx.file}: unsafe link ${JSON.stringify(href)}: ${LINK_RULE}`,
+    );
+  }
   if (SCHEME.test(href)) return { href, isExternal: /^https?:/i.test(href) };
   const hashAt = href.indexOf("#");
   const target = hashAt === -1 ? href : href.slice(0, hashAt);

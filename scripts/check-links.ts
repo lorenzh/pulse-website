@@ -1,5 +1,6 @@
-// bun run check:links: offline link and external-request check over dist/.
+// bun run check:links: offline link, external-request and CSP check over dist/.
 import path from "node:path";
+import { cspProblems } from "../src/build/csp.ts";
 import { readDist } from "../src/build/dist-files.ts";
 import { checkLinks } from "../src/build/links-check.ts";
 
@@ -16,8 +17,13 @@ console.log(
   `${dist.html.size} pages, ${report.internalLinks} internal links, ${report.externalLinks} external links ` +
     `(${report.githubLinks} on github.com, not fetched)`,
 );
-if (report.problems.length > 0) {
-  console.error(`${report.problems.length} problems:\n- ${report.problems.join("\n- ")}`);
-  process.exit(1);
+const csp = [...dist.html].flatMap(([file, html]) => cspProblems(file, html));
+const groups = [
+  { heading: "links", problems: report.problems },
+  { heading: "csp", problems: csp },
+].filter((g) => g.problems.length > 0);
+for (const g of groups) {
+  console.error(`${g.heading}: ${g.problems.length} problems:\n- ${g.problems.join("\n- ")}`);
 }
-console.log("links ok");
+if (groups.length > 0) process.exit(1);
+console.log(`links ok, csp ok on ${dist.html.size} pages`);

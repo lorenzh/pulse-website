@@ -27,7 +27,7 @@ Bun 1.4.0 (package manager, runtime and test runner).
 | `src/islands/`                  | The only code shipped to the browser. Preact: theme toggle, menu, docs navigation, copy button. Vanilla: network canvas, live preview, scroll-in, heart burst |
 | `src/lib/`                      | Pure, tested logic: node placement (`network.ts`), frame throttle, command extraction, preview clock                                                          |
 | `src/docs/`                     | Docs pipeline: config, fetch and cache, Markdown renderer, link rewriting, nav, bump                                                                          |
-| `src/build/`                    | Meta tags, sitemap, theme script, tokens CSS, link and budget checks, static server                                                                           |
+| `src/build/`                    | Meta tags, sitemap, theme script, tokens CSS, URL safety, Content-Security-Policy, link and budget checks, static server                                      |
 | `src/styles/`                   | CSS; `tokens.css` is generated from `design/losoft-tokens.json`                                                                                               |
 | `scripts/`                      | `build.ts`, `bump-docs.ts`, `check-links.ts`, `check-budget.ts`, `check-a11y.ts`, `tokens.ts`                                                                 |
 | `docs.config.json`              | The pinned SHAs and the file list of every docs repo                                                                                                          |
@@ -65,6 +65,30 @@ Every fact on the home page is a constant in `src/content/facts.ts` with its sou
 ## Hosted page placeholders
 
 Nothing about the hosted offer is decided. Prices, limits, regions, trial, availability, data location, open-source terms and the status URL are shown as marked placeholders such as `[PRICE]`, `[REGIONS]`, `[TRIAL]`, `[DATA_LOCATION]`, `[OSS_TERMS]`, `[STATUS_URL]`, `[AVAILABILITY]`, `[LIMIT]`, `[DISCOUNT]`, `[REGION]`, `[BACKUP REGION]` and `[RETENTION]`, with the note "Planned offer, details not final" above the plans. The waitlist form is disabled, has no `action` and sends nothing. A test fails if the built page contains a currency sign, a price, `status.losoft.dev` or a form action. A person replaces the placeholders when the offer exists.
+
+## Link rule and Content-Security-Policy
+
+**Links.** A page links only to `http:`, `https:` and `mailto:` URLs and to in-site targets: relative paths, `/…`, `#fragment`, `?query` and `//host`. `src/build/url-safety.ts` decides this. Like a browser, it first strips leading and trailing control characters and spaces and removes every tab, LF and CR, then takes the text before the first `:` (if that comes before any `/`, `?` and `#`) as the scheme, case-insensitive. Every other scheme fails, `javascript:`, `data:`, `vbscript:`, `file:` and `tel:` included. Three places apply it:
+
+- `resolveLink` (docs Markdown, links and images): the build fails with `<owner/repo> <file>: unsafe link "<link>": only http:, https:, mailto: and in-site links are allowed`.
+- `renderSite` (every rendered page, hand-written ones included, after decoding entities such as `&#106;` and `&colon;` once; like the browser, a numeric reference decodes even without its `;`, as in `javascript&#58alert(1)`): `<dist file>: unsafe link <tag> <attr>="<value>": …`.
+- `bun run check:links` on `dist/`: `<file>: unsafe link scheme in <tag> <attr>="<value>"`.
+
+The last two read tags as the browser's HTML tokenizer does (`src/build/html-refs.ts`): a `/` or a closing quote also separates attributes (`<a/href=…>`, `<a title="t"href=…>`), names are matched case-insensitively, and of two equal attributes the first counts, as in the browser.
+
+The link is quoted with `JSON.stringify`, so control characters show as `\u0001` or `\t` and the message stays on one line. A docs link with another scheme must be fixed in its source repository.
+
+**Policy.** `src/build/csp.ts` puts this meta tag first in the `<head>` of every page:
+
+```text
+default-src 'self'; script-src 'self' 'sha256-…'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'
+```
+
+- The `sha256-…` source is `themeScriptHash()` of the inline theme script, the only inline script. `src/build/csp.test.ts` pins the hash, so a change to `THEME_SCRIPT` must update that pin.
+- No page uses inline styles; islands change styles only through `style.setProperty`. No `'unsafe-inline'` or `'unsafe-eval'` exists.
+- `img-src data:` is kept but unused today; a `data:` image cannot run script.
+- `bun run check:links` checks the tag, its place, the policy, the script hash and the absence of `style` attributes and `<style>` elements on every page in `dist/` (heading `csp`). It finds the meta tags, the style attributes and the `<style>` elements with the same browser-like tag reader as the link check, so `<p/style=…>`, `<p title="t"style=…>` and `<style/>` count too. The check fails closed where markup could hide something: the page must start with only whitespace, an optional doctype, `<html>` and `<head>` before the CSP meta tag (a comment, `<template>` or text there is a problem), and every `<script` followed by whitespace, `/` or `>` counts as a script, also inside comments, attribute values or `<textarea>`, so a fake `<script src>` cannot hide the real script after it. A script with `src` is external only if it has no text, because an SVG script ignores `src` and runs its text. The `http-equiv` value must be `Content-Security-Policy` in any ASCII case, without surrounding whitespace, as Chromium compares it; a padded value is no CSP. A script ends where the browser ends it, at `</script` followed by whitespace, `/` or `>`, so a script closed by `</script/>` or `</script x>` is counted as well. `bun run check:a11y` fails on any CSP violation or CSP console message in every browser context, and a positive control proves that a blocked inline script is seen.
+- A meta tag cannot carry `frame-ancestors`, `report-uri`/`report-to` or `sandbox`. HTTP headers (`frame-ancestors 'none'`, HSTS, `X-Content-Type-Options: nosniff`, `Referrer-Policy`, `Permissions-Policy` and reporting) follow once a host is chosen.
 
 ## Site URL and meta
 
