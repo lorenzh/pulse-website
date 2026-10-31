@@ -14,7 +14,13 @@ const TYPES: Record<string, string> = {
 
 /** File inside `root` for a URL path, or undefined when it escapes root. */
 export function fileForUrl(root: string, urlPath: string): string | undefined {
-  const clean = decodeURIComponent(urlPath.split("?")[0] ?? "/");
+  let clean: string;
+  try {
+    clean = decodeURIComponent(urlPath.split("?")[0] ?? "/");
+  } catch (error) {
+    if (error instanceof URIError) return undefined;
+    throw error;
+  }
   const relative = clean.endsWith("/") ? `${clean}index.html` : clean;
   const file = path.join(root, relative);
   return file.startsWith(root + path.sep) || file === root ? file : undefined;
@@ -40,7 +46,15 @@ export function startStaticServer(root: string): Promise<{ server: Server; origi
     }
   };
   const server = createServer((req, res) => {
-    void handle(req, res);
+    handle(req, res).catch((error: unknown) => {
+      console.error("static server failed", error);
+      if (res.headersSent) {
+        res.end();
+        return;
+      }
+      res.writeHead(500, { "content-type": "text/plain; charset=utf-8" });
+      res.end("internal error");
+    });
   });
   return new Promise((resolve, reject) => {
     server.once("error", reject);

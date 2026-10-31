@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, test } from "bun:test";
 import assert from "node:assert/strict";
-import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { mkdtemp, readdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { DocsFetchError, type FetchLike, loadDocFile, rawUrl } from "./fetch.ts";
@@ -83,4 +83,70 @@ test("wraps a network failure", async () => {
     loadDocFile({ ...source, path: "docs/net.md" }, { fetch: failing, cacheDir: dir }),
     /failed/,
   );
+});
+
+test("a failed cache write leaves no file at the final path and no temp file", async () => {
+  const cache = await mkdtemp(path.join(tmpdir(), "docs-fetch-fail-"));
+  try {
+    const final = path.join(cache, "lorenzh__pulse-api", sha, "docs/install.md");
+    await assert.rejects(
+      loadDocFile(source, {
+        fetch: fake(200, "# Install\n", []),
+        cacheDir: cache,
+        writeFile: async (file) => {
+          await writeFile(file, "# Inst");
+          throw new Error("disk full");
+        },
+      }),
+      DocsFetchError,
+    );
+    await assert.rejects(stat(final), { code: "ENOENT" });
+    const left = await readdir(path.dirname(final));
+    assert.deepEqual(
+      left.filter((f) => f.endsWith(".tmp")),
+      [],
+    );
+    const calls: string[] = [];
+    const text = await loadDocFile(source, {
+      fetch: fake(200, "# Install\n", calls),
+      cacheDir: cache,
+    });
+    assert.equal(text, "# Install\n");
+    assert.equal(calls.length, 1);
+  } finally {
+    await rm(cache, { recursive: true, force: true });
+  }
+});
+
+test("the final cache path is never written in place", async () => {
+  const cache = await mkdtemp(path.join(tmpdir(), "docs-fetch-wait-"));
+  try {
+    const final = path.join(cache, "lorenzh__pulse-api", sha, "docs/install.md");
+    let release = (): void => {};
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    let started = (_file: string): void => {};
+    const writing = new Promise<string>((resolve) => {
+      started = resolve;
+    });
+    const loading = loadDocFile(source, {
+      fetch: fake(200, "# Install\n", []),
+      cacheDir: cache,
+      writeFile: async (file, text) => {
+        await writeFile(file, "# Inst");
+        started(file);
+        await gate;
+        await writeFile(file, text);
+      },
+    });
+    const target = await writing;
+    await assert.rejects(stat(final), { code: "ENOENT" });
+    assert.notEqual(target, final);
+    release();
+    assert.equal(await loading, "# Install\n");
+    assert.equal(await readFile(final, "utf8"), "# Install\n");
+  } finally {
+    await rm(cache, { recursive: true, force: true });
+  }
 });

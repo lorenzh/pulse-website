@@ -47,3 +47,9 @@ test("unknown languages are escaped, never executed as HTML", () => {
   assert.equal(highlight("<b>&</b>", "ts"), "&lt;b&gt;&amp;&lt;/b&gt;");
   assert.equal(highlight("<b>", undefined), "&lt;b&gt;");
 });
+
+test("a prototype-chain language name is escaped plain text", () => {
+  for (const name of Object.getOwnPropertyNames(Object.prototype)) {
+    assert.equal(highlight("<b>x</b>", name), "&lt;b&gt;x&lt;/b&gt;", name);
+  }
+});

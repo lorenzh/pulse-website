@@ -38,12 +38,39 @@ function parseRepo(key: string, value: unknown): DocsRepo {
   const seen = new Set<string>();
   for (const file of files) {
     if (typeof file !== "string" || !FILE.test(file)) {
-      throw new DocsConfigError(`repos.${key}.files: "${String(file)}" is not a docs/*.md path`);
+      throw new DocsConfigError(
+        `repos.${key}.files: ${describeEntry(file)} is not a docs/*.md path`,
+      );
     }
     if (seen.has(file)) throw new DocsConfigError(`repos.${key}.files lists ${file} twice`);
     seen.add(file);
   }
   return { repo, sha, date, files: [...seen] };
+}
+
+/** Names a rejected entry without converting or walking it. */
+function describeEntry(value: unknown): string {
+  if (Array.isArray(value)) return "an array";
+  if (value === null) return "null";
+  switch (typeof value) {
+    case "string":
+      return JSON.stringify(value);
+    case "object":
+      return "an object";
+    case "number":
+      return "a number";
+    case "boolean":
+      return "a boolean";
+    case "bigint":
+      return "a bigint";
+    case "symbol":
+      return "a symbol";
+    case "function":
+      return "a function";
+    case "undefined":
+      return "undefined";
+  }
+  return "a value";
 }
 
 export function parseDocsConfig(value: unknown): DocsConfig {

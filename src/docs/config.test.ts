@@ -45,3 +45,13 @@ test("stringify is stable, one line per file, and parses back", () => {
   assert.deepEqual(parseDocsConfig(JSON.parse(text)), good);
   assert.equal(stringifyDocsConfig(parseDocsConfig(JSON.parse(text))), text);
 });
+
+test("a hostile files entry throws only DocsConfigError", () => {
+  let deep: unknown[] = [];
+  for (let i = 0; i < 10_000; i++) deep = [deep];
+  for (const entry of [deep, Object.create(null) as unknown]) {
+    const bad = { repos: { api: { ...good.repos.api, files: [entry] } } };
+    assert.throws(() => parseDocsConfig(bad), DocsConfigError);
+    assert.throws(() => parseDocsConfig(bad), /^DocsConfigError: repos\.api\.files: /);
+  }
+});
