@@ -41,6 +41,11 @@ function readValue(source: string, from: number): { value: string; next: number 
  * start with `=`, names are lowercased in ASCII only, and the first of duplicate attributes wins.
  */
 export function parseAttrs(source: string, from = 0): Record<string, string> {
+  return readAttrs(source, from).attrs;
+}
+
+/** The attributes from `from` and the index just after the closing `>` (the end if there is none). */
+function readAttrs(source: string, from: number): { attrs: Record<string, string>; end: number } {
   const attrs = new Map<string, string>();
   let i = from;
   while (i < source.length && source[i] !== ">") {
@@ -60,15 +65,20 @@ export function parseAttrs(source: string, from = 0): Record<string, string> {
     }
     if (!attrs.has(name)) attrs.set(name, value);
   }
-  return Object.fromEntries(attrs);
+  return { attrs: Object.fromEntries(attrs), end: Math.min(i + 1, source.length) };
 }
 
-/** Every start tag in `html`, with its lowercased name and its attributes. */
-export function* startTags(
-  html: string,
-): Generator<{ tag: string; attrs: Record<string, string> }> {
+/**
+ * A start tag: its lowercased name, its attributes, the index of its `<` and the index just after
+ * its `>`.
+ */
+export type StartTag = { tag: string; attrs: Record<string, string>; start: number; end: number };
+
+/** Every start tag in `html`, with its lowercased name, its attributes and its position. */
+export function* startTags(html: string): Generator<StartTag> {
   for (const m of html.matchAll(TAG_OPEN)) {
-    yield { tag: asciiLower(m[1] ?? ""), attrs: parseAttrs(html, m.index + m[0].length) };
+    const { attrs, end } = readAttrs(html, m.index + m[0].length);
+    yield { tag: asciiLower(m[1] ?? ""), attrs, start: m.index, end };
   }
 }
 

@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { decode, parseAttrs, startTags } from "./html-refs.ts";
+import { decode, type StartTag, startTags } from "./html-refs.ts";
 import { themeScriptHash } from "./theme-hash.ts";
 
 /** A page cannot carry the Content-Security-Policy meta tag. */
@@ -43,8 +43,11 @@ export function withCsp(html: string): string {
   return `${html.slice(0, at)}${cspMetaTag()}${html.slice(at)}`;
 }
 
-const CSP_META = /<meta\b[^>]*\bhttp-equiv\s*=\s*["']?content-security-policy\b[^>]*>/gi;
-const SCRIPT = /<script\b([^>]*)>([\s\S]*?)<\/script\s*>/gi;
+/**
+ * The end of script data as the HTML tokenizer reads it: `</script` in any ASCII case, then a tab,
+ * LF, FF, CR, space, `/` or `>`. So `</script/>` and `</script x>` end a script too.
+ */
+const SCRIPT_END = /<\/script[\t\n\f\r />]/gi;
 
 function sha256(text: string): string {
   return `sha256-${createHash("sha256").update(text).digest("base64")}`;
@@ -58,16 +61,48 @@ function scriptSources(policy: string): string[] {
   return directive ? directive.slice(1) : [];
 }
 
-function placementProblems(html: string, metas: string[]): string[] {
-  if (metas.length !== 1) return [`${metas.length} CSP meta tags, expected 1`];
-  const first = /<head(?:\s[^>]*)?>\s*(<[^>]*>)/i.exec(html)?.[1];
-  return first === metas[0] ? [] : ["the CSP meta tag is not the first element of <head>"];
+function isCspMeta({ tag, attrs }: StartTag): boolean {
+  const equiv = attrs["http-equiv"];
+  return tag === "meta" && equiv?.trim().toLowerCase() === "content-security-policy";
 }
 
-function inlineScriptProblems(html: string, policy: string): string[] {
-  const inline = [...html.matchAll(SCRIPT)].filter((m) => parseAttrs(m[1] ?? "").src === undefined);
+/** The CSP meta tag must be the first tag after `<head>`, with only whitespace between them. */
+function placementProblems(html: string, tags: StartTag[], metas: StartTag[]): string[] {
+  if (metas.length !== 1) return [`${metas.length} CSP meta tags, expected 1`];
+  const at = tags.findIndex((t) => t.tag === "head");
+  const head = tags[at];
+  const first = tags[at + 1];
+  const placed =
+    head !== undefined &&
+    first !== undefined &&
+    first === metas[0] &&
+    /^[\t\n\f\r ]*$/.test(html.slice(head.end, first.start));
+  return placed ? [] : ["the CSP meta tag is not the first element of <head>"];
+}
+
+/**
+ * The text of every inline script (one without `src`), read like the tokenizer: the text runs from
+ * the start tag's `>` to the next script end tag (see SCRIPT_END) or the end of the page, and tags
+ * inside that text are not tags. The tokenizer never ends a script earlier than this, so no script
+ * is missed; inside `<!--<script>` the browser ends it later, which can only add a problem.
+ */
+function inlineScripts(html: string, tags: StartTag[]): string[] {
+  const texts: string[] = [];
+  const end = new RegExp(SCRIPT_END.source, SCRIPT_END.flags);
+  let textEnd = 0;
+  for (const { tag, attrs, start, end: open } of tags) {
+    if (tag !== "script" || start < textEnd) continue;
+    end.lastIndex = open;
+    textEnd = end.exec(html)?.index ?? html.length;
+    if (attrs.src === undefined) texts.push(html.slice(open, textEnd));
+  }
+  return texts;
+}
+
+function inlineScriptProblems(html: string, tags: StartTag[], policy: string): string[] {
+  const inline = inlineScripts(html, tags);
   if (inline.length !== 1) return [`${inline.length} inline scripts, expected 1`];
-  const hash = sha256(inline[0]?.[2] ?? "");
+  const hash = sha256(inline[0] ?? "");
   return scriptSources(policy).includes(`'${hash}'`)
     ? []
     : [`the inline script hash ${hash} is not in script-src`];
@@ -75,14 +110,15 @@ function inlineScriptProblems(html: string, policy: string): string[] {
 
 /** Problems with the CSP of one built page; empty if the page is fine. */
 export function cspProblems(file: string, html: string): string[] {
-  const metas = [...html.matchAll(CSP_META)].map((m) => m[0]);
-  const problems = placementProblems(html, metas);
-  const policy = decode(parseAttrs(metas[0]?.replace(/^<meta\b|\/?>$/gi, "") ?? "").content ?? "");
+  const tags = [...startTags(html)];
+  const metas = tags.filter(isCspMeta);
+  const problems = placementProblems(html, tags, metas);
+  const policy = decode(metas[0]?.attrs.content ?? "");
   if (metas.length > 0 && policy !== contentSecurityPolicy()) {
     problems.push(`the CSP is ${JSON.stringify(policy)}, expected the site policy`);
   }
-  problems.push(...inlineScriptProblems(html, policy));
-  problems.push(...styleProblems(html));
+  problems.push(...inlineScriptProblems(html, tags, policy));
+  problems.push(...styleProblems(tags));
   return problems.map((p) => `${file}: ${p}`);
 }
 
@@ -90,10 +126,10 @@ export function cspProblems(file: string, html: string): string[] {
  * A `style` attribute or a `<style>` element, read with the browser-like start-tag reader, so
  * `<p/style=…>`, `<p title="t"style=…>` and `<style/>` count too.
  */
-function styleProblems(html: string): string[] {
+function styleProblems(tags: StartTag[]): string[] {
   let attribute = false;
   let element = false;
-  for (const { tag, attrs } of startTags(html)) {
+  for (const { tag, attrs } of tags) {
     if (attrs.style !== undefined) attribute = true;
     if (tag === "style") element = true;
   }

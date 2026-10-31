@@ -99,3 +99,46 @@ test("cspProblems reads style attributes and <style> like the browser's tag read
     "",
   );
 });
+
+test("cspProblems ends inline scripts like the browser's tokenizer", () => {
+  const good = cspMetaTag() + GOOD_HEAD;
+  for (const body of [
+    "<script>alert(1)</script/><p>x</p>",
+    "<script>alert(1)</script x><p>x</p>",
+    "<script>alert(1)</script\n/><p>x</p>",
+    "<SCRIPT/>alert(1)</SCRIPT\t>",
+    "<script>alert(1)",
+  ]) {
+    assert.match(problemsOf(page(good, body)), /^a\.html: 2 inline scripts, expected 1$/, body);
+  }
+  // Tags inside script text are text: one more script, not two.
+  assert.match(
+    problemsOf(page(good, '<script>"<script>x</scripts>"</script>')),
+    /^a\.html: 2 inline scripts, expected 1$/,
+  );
+  // A script with src is not inline, whatever its end tag.
+  assert.equal(problemsOf(page(good, '<script src="/b.js"></script/>')), "");
+  // The theme script itself still hashes right when its end tag has another form.
+  const odd = `${cspMetaTag()}<script>${THEME_SCRIPT}</script\n>`;
+  assert.equal(problemsOf(page(odd)), "");
+});
+
+test("cspProblems reads the CSP meta tag like the browser's tag reader", () => {
+  const meta = cspMetaTag();
+  const slashed = meta.replace("<meta http-equiv", "<meta/http-equiv");
+  const upper = meta
+    .replace("<meta http-equiv=", "<META HTTP-EQUIV=")
+    .replace("Content-Se", "CONTENT-SE");
+  assert.equal(problemsOf(page(upper + GOOD_HEAD)), "");
+  assert.match(problemsOf(page(meta + slashed + GOOD_HEAD)), /^a\.html: 2 CSP meta tags/);
+  assert.match(problemsOf(page(meta + upper + GOOD_HEAD)), /^a\.html: 2 CSP meta tags/);
+  assert.match(
+    problemsOf(page(`x${meta}${GOOD_HEAD}`)),
+    /^a\.html: the CSP meta tag is not the first element of <head>$/,
+  );
+  assert.match(
+    problemsOf(`<html>${meta}<body>${THEME}</body></html>`),
+    /^a\.html: the CSP meta tag is not the first element of <head>$/,
+  );
+  assert.equal(problemsOf(page(`\n\t${meta}${GOOD_HEAD}`)), "");
+});

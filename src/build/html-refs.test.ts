@@ -1,6 +1,6 @@
 import { test } from "bun:test";
 import assert from "node:assert/strict";
-import { collectIds, collectRefs, decode, parseAttrs } from "./html-refs.ts";
+import { collectIds, collectRefs, decode, parseAttrs, startTags } from "./html-refs.ts";
 
 test("parseAttrs follows the HTML tokenizer", () => {
   assert.deepEqual(parseAttrs(' id="a" ID="b"'), { id: "a" });
@@ -27,6 +27,18 @@ test("collectRefs and collectIds read every start tag", () => {
     { tag: "img", attr: "src", value: "/i.png/" },
   ]);
   assert.deepEqual([...collectIds(html)], ["x"]);
+});
+
+test("startTags gives the position of each tag's < and the index after its >", () => {
+  const html = '<p title="a>b">x<br/><img src=x';
+  assert.deepEqual(
+    [...startTags(html)].map(({ tag, start, end }) => ({ tag, start, end })),
+    [
+      { tag: "p", start: 0, end: 15 },
+      { tag: "br", start: 16, end: 21 },
+      { tag: "img", start: 21, end: html.length },
+    ],
+  );
 });
 
 test("numeric references decode with or without a closing semicolon", () => {
