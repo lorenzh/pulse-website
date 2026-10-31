@@ -76,3 +76,26 @@ test("cspProblems rejects a second inline script, a style attribute and a <style
   assert.match(problemsOf(page(`${good}<style>p{}</style>`)), /a <style> element/);
   assert.equal(problemsOf(page(good, "<p>style=&quot;x&quot; &lt;style&gt;</p>")), "");
 });
+
+test("cspProblems reads style attributes and <style> like the browser's tag reader", () => {
+  const good = cspMetaTag() + GOOD_HEAD;
+  for (const body of [
+    '<p/style="color:red" id=t>x</p>',
+    '<p id=t title="t"style="color:red">x</p>',
+    "<P STYLE=color:red>x</P>",
+    "<p\fstyle>x</p>",
+  ]) {
+    assert.match(problemsOf(page(good, body)), /^a\.html: a style attribute$/, body);
+  }
+  for (const head of [
+    "<style/>p{}</style>",
+    "<STYLE\n>p{}</style>",
+    "<style media=x>p{}</style>",
+  ]) {
+    assert.match(problemsOf(page(good + head)), /^a\.html: a <style> element$/, head);
+  }
+  assert.equal(
+    problemsOf(page(good, '<p data-style="x" title="style=y">x</p><styles></styles>')),
+    "",
+  );
+});

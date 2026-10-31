@@ -64,7 +64,9 @@ export function parseAttrs(source: string, from = 0): Record<string, string> {
 }
 
 /** Every start tag in `html`, with its lowercased name and its attributes. */
-function* startTags(html: string): Generator<{ tag: string; attrs: Record<string, string> }> {
+export function* startTags(
+  html: string,
+): Generator<{ tag: string; attrs: Record<string, string> }> {
   for (const m of html.matchAll(TAG_OPEN)) {
     yield { tag: asciiLower(m[1] ?? ""), attrs: parseAttrs(html, m.index + m[0].length) };
   }

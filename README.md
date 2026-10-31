@@ -87,7 +87,7 @@ default-src 'self'; script-src 'self' 'sha256-…'; style-src 'self'; img-src 's
 - The `sha256-…` source is `themeScriptHash()` of the inline theme script, the only inline script. `src/build/csp.test.ts` pins the hash, so a change to `THEME_SCRIPT` must update that pin.
 - No page uses inline styles; islands change styles only through `style.setProperty`. No `'unsafe-inline'` or `'unsafe-eval'` exists.
 - `img-src data:` is kept but unused today; a `data:` image cannot run script.
-- `bun run check:links` checks the tag, its place, the policy, the script hash and the absence of `style` attributes on every page in `dist/` (heading `csp`). `bun run check:a11y` fails on any CSP violation or CSP console message in every browser context, and a positive control proves that a blocked inline script is seen.
+- `bun run check:links` checks the tag, its place, the policy, the script hash and the absence of `style` attributes and `<style>` elements on every page in `dist/` (heading `csp`). It finds them with the same browser-like tag reader as the link check, so `<p/style=…>`, `<p title="t"style=…>` and `<style/>` count too. `bun run check:a11y` fails on any CSP violation or CSP console message in every browser context, and a positive control proves that a blocked inline script is seen.
 - A meta tag cannot carry `frame-ancestors`, `report-uri`/`report-to` or `sandbox`. HTTP headers (`frame-ancestors 'none'`, HSTS, `X-Content-Type-Options: nosniff`, `Referrer-Policy`, `Permissions-Policy` and reporting) follow once a host is chosen.
 
 ## Site URL and meta

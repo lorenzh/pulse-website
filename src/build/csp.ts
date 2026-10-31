@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { decode, parseAttrs } from "./html-refs.ts";
+import { decode, parseAttrs, startTags } from "./html-refs.ts";
 import { themeScriptHash } from "./theme-hash.ts";
 
 /** A page cannot carry the Content-Security-Policy meta tag. */
@@ -82,7 +82,20 @@ export function cspProblems(file: string, html: string): string[] {
     problems.push(`the CSP is ${JSON.stringify(policy)}, expected the site policy`);
   }
   problems.push(...inlineScriptProblems(html, policy));
-  if (/<[a-z][^<>]*\sstyle\s*=/i.test(html)) problems.push("a style attribute");
-  if (/<style[\s>]/i.test(html)) problems.push("a <style> element");
+  problems.push(...styleProblems(html));
   return problems.map((p) => `${file}: ${p}`);
+}
+
+/**
+ * A `style` attribute or a `<style>` element, read with the browser-like start-tag reader, so
+ * `<p/style=…>`, `<p title="t"style=…>` and `<style/>` count too.
+ */
+function styleProblems(html: string): string[] {
+  let attribute = false;
+  let element = false;
+  for (const { tag, attrs } of startTags(html)) {
+    if (attrs.style !== undefined) attribute = true;
+    if (tag === "style") element = true;
+  }
+  return [...(attribute ? ["a style attribute"] : []), ...(element ? ["a <style> element"] : [])];
 }
