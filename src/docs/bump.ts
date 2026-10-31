@@ -14,6 +14,17 @@ export class BumpError extends Error {
   override name = "BumpError";
 }
 
+/** The GitHub repository of a docs key; throws for any key that is not an own key of DOC_REPOS. */
+export function repoForKey(key: string): string {
+  const repo = Object.hasOwn(DOC_REPOS, key) ? DOC_REPOS[key] : undefined;
+  if (repo === undefined) {
+    throw new BumpError(
+      `unknown repo "${key}", expected one of ${Object.keys(DOC_REPOS).join(", ")}`,
+    );
+  }
+  return repo;
+}
+
 /** Reads the commit SHA out of `git ls-remote <url> refs/heads/main`. */
 export function parseLsRemote(output: string): string {
   const match = /^([0-9a-f]{40})\s+refs\/heads\/main$/m.exec(output);
@@ -52,8 +63,8 @@ export function commitDate(commit: unknown): string {
 /** Replaces the pin of one repo; keeps the repo order of DOC_REPOS, then any extra keys. */
 export function withRepo(config: DocsConfig | undefined, key: string, entry: DocsRepo): DocsConfig {
   const merged = { ...(config?.repos ?? {}), [key]: entry };
-  const known = Object.keys(DOC_REPOS).filter((k) => k in merged);
-  const extra = Object.keys(merged).filter((k) => !(k in DOC_REPOS));
+  const known = Object.keys(DOC_REPOS).filter((k) => Object.hasOwn(merged, k));
+  const extra = Object.keys(merged).filter((k) => !Object.hasOwn(DOC_REPOS, k));
   const repos: Record<string, DocsRepo> = {};
   for (const k of [...known, ...extra]) {
     const value = merged[k];

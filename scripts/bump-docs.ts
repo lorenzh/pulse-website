@@ -6,6 +6,7 @@ import {
   DOC_REPOS,
   docFilesFromTree,
   parseLsRemote,
+  repoForKey,
   withRepo,
 } from "../src/docs/bump.ts";
 import { type DocsConfig, parseDocsConfig, stringifyDocsConfig } from "../src/docs/config.ts";
@@ -35,9 +36,7 @@ try {
 const wanted = process.argv.slice(2).filter((a) => a !== "--");
 const keys = wanted.length > 0 ? wanted : Object.keys(DOC_REPOS);
 for (const key of keys) {
-  const repo = DOC_REPOS[key];
-  if (!repo)
-    throw new Error(`unknown repo "${key}", expected one of ${Object.keys(DOC_REPOS).join(", ")}`);
+  const repo = repoForKey(key);
   const sha = parseLsRemote(
     // eslint-disable-next-line sonarjs/no-os-command-from-path -- a fixed command name, run only by a person who has git installed
     execFileSync("git", ["ls-remote", `https://github.com/${repo}.git`, "refs/heads/main"], {

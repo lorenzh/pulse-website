@@ -99,3 +99,12 @@ test("description is the first paragraph as text, cut at 160 characters", () => 
   assert.equal(renderMarkdown("# T\n", keep).description, "");
   assert.equal(truncate("short", 160), "short");
 });
+
+test("a block in a prototype-chain language renders as plain code", () => {
+  for (const name of Object.getOwnPropertyNames(Object.prototype)) {
+    const { html } = renderMarkdown(`\`\`\`${name}\n<b>x</b>\n\`\`\`\n`, keep);
+    assert.match(html, /aria-label="Code"/, name);
+    assert.ok(html.includes("&lt;b&gt;x&lt;/b&gt;"), name);
+    assert.ok(!html.includes("<b>"), name);
+  }
+});

@@ -77,18 +77,18 @@ function highlightBash(code: string): string {
   return out + escapeHtml(code.slice(last));
 }
 
-const LANGUAGES: Record<string, (code: string) => string> = {
-  json: highlightJson,
-  jsonc: highlightJson,
-  yaml: highlightYaml,
-  yml: highlightYaml,
-  sh: highlightBash,
-  bash: highlightBash,
-  shell: highlightBash,
-};
+const LANGUAGES: ReadonlyMap<string, (code: string) => string> = new Map([
+  ["json", highlightJson],
+  ["jsonc", highlightJson],
+  ["yaml", highlightYaml],
+  ["yml", highlightYaml],
+  ["sh", highlightBash],
+  ["bash", highlightBash],
+  ["shell", highlightBash],
+]);
 
 /** Small own tokenizer for json, yaml and bash. Other languages are escaped plain text. */
 export function highlight(code: string, language: string | undefined): string {
-  const tokenize = language === undefined ? undefined : LANGUAGES[language];
+  const tokenize = language === undefined ? undefined : LANGUAGES.get(language);
   return tokenize ? tokenize(code) : escapeHtml(code);
 }

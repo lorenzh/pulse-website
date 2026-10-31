@@ -6,6 +6,7 @@ import {
   DOC_REPOS,
   docFilesFromTree,
   parseLsRemote,
+  repoForKey,
   withRepo,
 } from "./bump.ts";
 
@@ -61,4 +62,40 @@ test("withRepo replaces one pin and keeps the sidebar order", () => {
     withRepo(next, "kit", { ...entry, sha: "d".repeat(40) }).repos.kit?.sha,
     "d".repeat(40),
   );
+});
+
+test("repoForKey accepts only own keys of DOC_REPOS", () => {
+  assert.equal(repoForKey("api"), "lorenzh/pulse-api");
+  for (const name of [...Object.getOwnPropertyNames(Object.prototype), "API"]) {
+    assert.throws(
+      () => repoForKey(name),
+      (error: unknown) =>
+        error instanceof BumpError &&
+        error.message ===
+          `unknown repo "${name}", expected one of api, probe, status, notify, contract, kit`,
+      name,
+    );
+  }
+});
+
+test("withRepo keeps a constructor key after the six known keys", () => {
+  const entry = {
+    repo: "lorenzh/pulse-api",
+    sha,
+    date: "2026-10-29T10:00:00Z",
+    files: ["docs/a.md"],
+  };
+  const repos = Object.fromEntries(
+    ["api", "probe", "status", "notify", "contract", "kit"].map((k) => [k, entry]),
+  );
+  const out = withRepo({ repos }, "constructor", entry);
+  assert.deepEqual(Object.keys(out.repos), [
+    "api",
+    "probe",
+    "status",
+    "notify",
+    "contract",
+    "kit",
+    "constructor",
+  ]);
 });

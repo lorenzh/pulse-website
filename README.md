@@ -52,7 +52,7 @@ The server render uses real React (`renderToStaticMarkup`); `react` is aliased t
 
 ## How the docs are pinned
 
-`docs.config.json` holds, for each of the six repos (`api`, `probe`, `status`, `notify`, `contract`, `kit`), the repository, a 40-character commit SHA, its commit date and the list of published files (`docs/*.md` and `docs/channels/*.md`). It is the only place with SHAs. The build fetches `https://raw.githubusercontent.com/<repo>/<sha>/<path>`, caches it in `.cache/docs/` (ignored) and fails on a non-200 answer, a bad SHA or an empty file. The README of a repo is not published.
+`docs.config.json` holds, for each of the six repos (`api`, `probe`, `status`, `notify`, `contract`, `kit`), the repository, a 40-character commit SHA, its commit date and the list of published files (`docs/*.md` and `docs/channels/*.md`). It is the only place with SHAs. The build fetches `https://raw.githubusercontent.com/<repo>/<sha>/<path>`, caches it in `.cache/docs/` (ignored) and fails on a non-200 answer, a bad SHA or an empty file. The README of a repo is not published. A cache file is written to a temp file (`*.tmp`) next to it and renamed into place, so an interrupted build leaves no partial cache hit; a `.tmp` left by a killed build is never read and not cleaned up.
 
 To update: `bun run docs:bump`, review the diff (a new upstream file shows up as a new line), run `bun run check:all`, merge. The build fails on a dangling link anchor and when a published file is not in the navigation (`src/docs/nav.ts`, which maps each sidebar entry to a file). Never edit a generated page by hand; change the source repository.
 

@@ -40,16 +40,16 @@ export function truncate(text: string, max: number): string {
   return `${(space > max / 2 ? cut.slice(0, space) : cut).trimEnd()}…`;
 }
 
-const LANGUAGE_LABEL: Record<string, string> = {
-  sh: "Shell commands",
-  bash: "Shell commands",
-  json: "JSON",
-  yaml: "YAML",
-  text: "Plain text",
-};
+const LANGUAGE_LABEL: ReadonlyMap<string, string> = new Map([
+  ["sh", "Shell commands"],
+  ["bash", "Shell commands"],
+  ["json", "JSON"],
+  ["yaml", "YAML"],
+  ["text", "Plain text"],
+]);
 
 function codeLabel(lang: string | undefined): string {
-  return (lang && LANGUAGE_LABEL[lang]) || "Code";
+  return (lang && LANGUAGE_LABEL.get(lang)) || "Code";
 }
 
 function calloutClass(inner: string): string {
@@ -96,7 +96,7 @@ export function renderMarkdown(
             ? ""
             : `<span class="copy-slot" data-island="copy-button" data-copy="${escapeHtml(commands)}"></span>`;
         return (
-          `<div class="code-block${commands === undefined ? "" : " has-copy"}"><pre class="code" tabindex="0" role="region" aria-label="${label}">` +
+          `<div class="code-block${commands === undefined ? "" : " has-copy"}"><pre class="code" tabindex="0" role="region" aria-label="${escapeHtml(label)}">` +
           `<code${langClass}>${highlight(text, language)}</code></pre>${slot}</div>\n`
         );
       },
