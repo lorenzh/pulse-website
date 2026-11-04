@@ -629,6 +629,9 @@ main > section {
   stroke: var(--accent);
   stroke-width: 2;
 }
+.diagram-box .diagram-optional {
+  stroke-dasharray: 6 4;
+}
 .diagram-text text {
   fill: var(--text);
   font-family: var(--font-mono);
@@ -648,6 +651,105 @@ main > section {
   fill: var(--muted);
   font-family: var(--font-mono);
   font-size: 12px;
+}
+/* See it in action: static previews, one column on small screens like the feature grid. */
+.preview-grid {
+  list-style: none;
+  padding: 0;
+  margin: 32px 0 0;
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+}
+@media (min-width: 720px) {
+  .preview-grid {
+    gap: var(--grid-gap);
+  }
+}
+.preview-grid > li {
+  display: flex;
+}
+.preview {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  margin: 0;
+}
+.preview figcaption {
+  color: var(--lead);
+  font-size: var(--fs-small);
+  line-height: 1.5;
+}
+.preview-screen {
+  flex: 1;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  overflow: hidden;
+  font-size: var(--fs-small);
+}
+.preview-screen.terminal {
+  background: var(--code);
+  border-color: var(--term-line);
+}
+.preview-head,
+.preview-summary,
+.preview-row {
+  margin: 0;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--rule);
+}
+.preview-rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.preview-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.preview-row:last-child {
+  border-bottom: 0;
+}
+.preview-console {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+}
+.preview-title {
+  margin: 0;
+  font-weight: 700;
+}
+.preview-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: var(--muted);
+}
+.preview-box {
+  height: 24px;
+  background: var(--field);
+  border: 1px solid var(--field-line);
+  border-radius: var(--radius-sm);
+}
+.preview-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.preview-action {
+  padding: 4px 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-pill);
+  font-weight: 500;
+}
+.preview-action:last-child {
+  background: var(--strong);
+  color: var(--on-strong);
 }
 .service-list .card {
   display: flex;

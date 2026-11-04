@@ -87,11 +87,11 @@ test("every hosted promise carries a placeholder", () => {
     assert.equal(tds.length, 2);
     cells.push(tds[1] ?? "");
   }
-  assert.ok(cells.length >= 6, "comparison rows");
+  assert.ok(cells.length >= 7, "comparison rows");
 
   const included = between(hosted, /<ul class="feature-grid">/, "</ul>");
   const cards = included.split('<li class="card" data-reveal="true">').slice(1);
-  assert.ok(cards.length >= 4, "included cards");
+  assert.ok(cards.length >= 5, "included cards");
   cells.push(...cards);
 
   const plans = between(hosted, /<ul class="plan-grid">/, '<div id="oss"');
@@ -149,4 +149,22 @@ test("Home and Hosted ship the canvas and scroll-in slots; the header has the wa
   const header = hosted.slice(hosted.indexOf("<header"), hosted.indexOf("</header>"));
   assert.match(header, /Join the waitlist/);
   assert.doesNotMatch(header, /github\.com/);
+});
+
+test("issue 575 content: the console card and the Web console row", () => {
+  const flat = hosted.replace(/\s+/g, " ");
+  assert.ok(
+    flat.includes(
+      '<rect x="3" y="3" width="7" height="9" rx="1"></rect><rect x="14" y="3" width="7" height="5" rx="1"></rect><rect x="14" y="12" width="7" height="9" rx="1"></rect><rect x="3" y="16" width="7" height="5" rx="1"></rect></svg><h3 class="t-h3">The same open-source console</h3><p>Planned: the pulse-console you can run yourself, connected to your hosted API. Check management in the console is still in progress. <mark class="placeholder">[AVAILABILITY]</mark></p>',
+    ),
+  );
+  const row =
+    '<th scope="row">Web console</th><td>Optional pulse-console; check management in progress</td><td>Planned, the same console <mark class="placeholder">[PARITY]</mark></td>';
+  const at = flat.indexOf(row);
+  assert.ok(at > flat.indexOf('<th scope="row">Checks file and API</th>'), "after checks row");
+  assert.ok(at < flat.indexOf('<th scope="row">Price</th>'), "before price row");
+  const included = between(hosted, /<ul class="feature-grid">/, "</ul>");
+  const cards = included.split('<li class="card" data-reveal="true">').slice(1);
+  assert.ok(cards.at(-1)?.includes("The same open-source console"), "console card is last");
+  assert.doesNotMatch(hosted, /agent/i);
 });
