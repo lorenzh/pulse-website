@@ -72,6 +72,16 @@ const INCLUDED: { icon: IconName; title: string; text: React.ReactNode }[] = [
       </>
     ),
   },
+  {
+    icon: "panel",
+    title: "The same open-source console",
+    text: (
+      <>
+        Planned: the pulse-console you can run yourself, connected to your hosted API. Check
+        management in the console is still in progress. <Placeholder name="AVAILABILITY" />
+      </>
+    ),
+  },
 ];
 
 type Plan = {
@@ -367,6 +377,13 @@ export function HostedContent() {
                 <td>Same</td>
                 <td>
                   <Placeholder name="PARITY" />
+                </td>
+              </tr>
+              <tr>
+                <th scope="row">Web console</th>
+                <td>Optional pulse-console; check management in progress</td>
+                <td>
+                  Planned, the same console <Placeholder name="PARITY" />
                 </td>
               </tr>
               <tr>

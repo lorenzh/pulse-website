@@ -11,6 +11,7 @@ import {
   STATUS_PAGE_URL,
 } from "./facts.ts";
 import { scrollRegion } from "./hosted.tsx";
+import { InActionPreviews } from "./previews.tsx";
 import { StatusMock } from "./status-mock.tsx";
 
 const FEATURES: { icon: IconName; title: string; text: string }[] = [
@@ -45,6 +46,16 @@ const FEATURES: { icon: IconName; title: string; text: string }[] = [
     text: "Your name, logo, colours and fonts. Light and dark, accessible, works without tracking.",
   },
   {
+    icon: "grid",
+    title: "Components",
+    text: "Group checks into what your users know, like Shop or API. The page then shows the components instead of single checks.",
+  },
+  {
+    icon: "rss",
+    title: "Feed and badges",
+    text: "An Atom feed of incidents and SVG uptime badges for READMEs and dashboards.",
+  },
+  {
     icon: "message",
     title: "Incident updates",
     text: "Post what you know, from investigating to resolved. The page, the feed and every channel follow.",
@@ -58,6 +69,16 @@ const FEATURES: { icon: IconName; title: string; text: string }[] = [
     icon: "code",
     title: "Checks API",
     text: "Change checks, components and maintenance over an admin API. No restart, no lost edits.",
+  },
+  {
+    icon: "zap",
+    title: "CDN-ready caching",
+    text: "The page, the feed and the badges send ETags and answer a repeat with 304. Feed and badges may be cached by a CDN for 60 seconds.",
+  },
+  {
+    icon: "database",
+    title: "Hot backups",
+    text: "One command writes a consistent copy of the database while the API keeps serving traffic. It never overwrites a file.",
   },
   {
     icon: "bell",
@@ -178,7 +199,7 @@ export function HomeContent() {
               What your visitors see
             </h2>
             <p className="lead">
-              Every check with its state written as a word, 90 days of uptime, open and recently
+              Every component with its state written as a word, 90 days of uptime, open and recently
               resolved incidents, and planned maintenance. Only check targets (URLs) and error
               details stay private by default. Components group checks, and the page shows
               components. Your name, logo, colours and fonts replace the losoft look with one theme
@@ -211,19 +232,62 @@ export function HomeContent() {
       <section id="how" className="band" aria-labelledby="how-title">
         <p className="eyebrow">How it works</p>
         <h2 id="how-title" className="t-h2">
-          Four small services, one shared contract
+          Four small services, an optional console, one shared contract
         </h2>
         <p className="lead">
           Probes run the checks and post results. The API decides the state of every check and keeps
-          the incidents. The status page and the notifier only read from it.
+          the incidents. The status page and the notifier only read from it. The optional console
+          signs you in and talks to the admin API.
         </p>
         <div data-reveal>
           <ArchitectureDiagram />
         </div>
         <p>
-          All four share <code>pulse-contract</code>: the wire types, runtime validators and a
+          Each of them shares <code>pulse-contract</code>: the wire types, runtime validators and a
           version header, so a mismatched deploy fails loudly instead of quietly.
         </p>
+      </section>
+
+      <section id="in-action" className="band" aria-labelledby="in-action-title">
+        <p className="eyebrow">See it in action</p>
+        <h2 id="in-action-title" className="t-h2">
+          The page, the wizard and the console
+        </h2>
+        <InActionPreviews />
+      </section>
+
+      <section id="next" className="band" aria-labelledby="next-title">
+        <p className="eyebrow">Coming next</p>
+        <h2 id="next-title" className="t-h2">
+          What we are building now
+        </h2>
+        <ul className="card-grid">
+          <li className="card" data-reveal>
+            <span className="tag">in progress</span>
+            <h3 className="t-h3">pulse-console</h3>
+            <p>
+              A web console for pulse. Today it has first-run setup, a local owner account and
+              password sign-in. Managing checks, components and maintenance through the admin API
+              comes next.
+            </p>
+            <a className="text-link" href="/docs/console/">
+              Read the console docs
+            </a>
+          </li>
+          <li className="card" data-reveal>
+            <span className="tag">coming soon</span>
+            <h3 className="t-h3">pulse-deploy CLI</h3>
+            <p>
+              <code>pulse init</code> asks a few questions and writes a plain Docker Compose
+              install; <code>pulse up</code>, <code>pulse status</code> and <code>pulse down</code>{" "}
+              run it. The code and the guide are public; the first release with binaries is coming
+              soon.
+            </p>
+            <a className="text-link" href="/docs/deploy/cli/">
+              Read the CLI guide
+            </a>
+          </li>
+        </ul>
       </section>
 
       <section className="band" aria-labelledby="start-title">

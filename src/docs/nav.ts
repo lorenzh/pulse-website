@@ -12,6 +12,7 @@ function e(label: string, repoKey: string, file: string): NavEntry {
  * "Check states", "Quorum and incidents", "Maintenance windows" and "Heartbeats" are headings of
  * api concepts.md and "Upgrades and backup" is a section of api operation.md, so they have no
  * entry of their own. There is no "Metrics" page in any source, so the design's entry is dropped.
+ * The last group, "Coming soon", holds real pages of tools that are not released yet.
  */
 export const NAV: NavGroup[] = [
   {
@@ -67,6 +68,15 @@ export const NAV: NavGroup[] = [
       e("Development · probe", "probe", "docs/development.md"),
       e("Development · status", "status", "docs/development.md"),
       e("Development · notify", "notify", "docs/development.md"),
+    ],
+  },
+  {
+    title: "Coming soon",
+    entries: [
+      e("Console · in progress", "console", "docs/index.md"),
+      e("Configuration · console", "console", "docs/configuration.md"),
+      e("Development · console", "console", "docs/development.md"),
+      e("pulse CLI · coming soon", "deploy", "docs/cli.md"),
     ],
   },
 ];

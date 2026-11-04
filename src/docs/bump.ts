@@ -1,6 +1,6 @@
 import type { DocsConfig, DocsRepo } from "./config.ts";
 
-/** The six repositories whose docs are published, in sidebar order. */
+/** The eight repositories whose docs are published, in sidebar order. */
 export const DOC_REPOS: Record<string, string> = {
   api: "lorenzh/pulse-api",
   probe: "lorenzh/pulse-probe",
@@ -8,6 +8,8 @@ export const DOC_REPOS: Record<string, string> = {
   notify: "lorenzh/pulse-notify",
   contract: "lorenzh/pulse-contract",
   kit: "lorenzh/pulse-kit",
+  console: "lorenzh/pulse-console",
+  deploy: "lorenzh/pulse-deploy",
 };
 
 export class BumpError extends Error {

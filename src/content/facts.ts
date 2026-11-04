@@ -72,3 +72,19 @@ export const STATUS_PAGE_FACTS = {
   uptimeDays: 90,
   detailsHiddenByDefault: true,
 } as const;
+
+/** Source: pulse-deploy cli/prompt.ts (askServices, askPlaces). */
+export const CLI_WIZARD_PROMPTS = [
+  { question: "Setup (minimal, full, demo, dev)", hint: "[full]:" },
+  { question: "Enable the status page?", hint: "[Y/n]" },
+  { question: "Enable notifications (notify)?", hint: "[Y/n]" },
+  { question: "Enable the console?", hint: "[Y/n]" },
+  { question: "Probe location", hint: "[default]:" },
+] as const;
+
+/** Source: pulse-console src/pages.ts (setupOwnerPage). */
+export const CONSOLE_SETUP = {
+  title: "Create the owner account",
+  labels: ["pulse-api URL", "Owner email", "Owner name", "Password"],
+  actions: ["Test connection", "Finish setup"],
+} as const;

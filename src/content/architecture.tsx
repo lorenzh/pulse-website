@@ -15,6 +15,11 @@ const SERVICES = [
     badge: "Read only",
     text: "Sends opened, resolved and reminder messages, at least once.",
   },
+  {
+    name: "pulse-console",
+    badge: "Optional · in progress",
+    text: "The web console: first-run setup and sign-in today, check management over the admin API in progress.",
+  },
 ] as const;
 
 /** Inline SVG with a title, a description and the same facts as a list below it. */
@@ -23,14 +28,15 @@ export function ArchitectureDiagram() {
     <div className="architecture">
       <svg
         className="diagram"
-        viewBox="0 0 720 220"
+        viewBox="0 0 720 300"
         role="img"
         aria-labelledby="arch-title arch-desc"
       >
         <title id="arch-title">How the pulse services connect</title>
         <desc id="arch-desc">
           The probe posts results to the API. The status page and the notifier read from the API.
-          All four share pulse-contract.
+          The optional console calls the admin API; its check management is in progress. Each
+          service shares pulse-contract.
         </desc>
         <defs>
           <marker
@@ -50,6 +56,7 @@ export function ArchitectureDiagram() {
           <rect x="285" y="80" width="150" height="60" rx="12" className="diagram-core" />
           <rect x="562" y="16" width="150" height="60" rx="12" />
           <rect x="562" y="144" width="150" height="60" rx="12" />
+          <rect x="285" y="232" width="150" height="60" rx="12" className="diagram-optional" />
         </g>
         <g className="diagram-text">
           <text x="83" y="116" textAnchor="middle">
@@ -64,11 +71,15 @@ export function ArchitectureDiagram() {
           <text x="637" y="180" textAnchor="middle">
             pulse-notify
           </text>
+          <text x="360" y="268" textAnchor="middle">
+            pulse-console
+          </text>
         </g>
         <g className="diagram-line" markerEnd="url(#arch-arrow)">
           <path d="M160 110H281" />
           <path d="M437 96 560 52" />
           <path d="M437 124 560 168" />
+          <path d="M360 230V144" />
         </g>
         <g className="diagram-label">
           <text x="220" y="100" textAnchor="middle">
@@ -79,6 +90,9 @@ export function ArchitectureDiagram() {
           </text>
           <text x="500" y="168" textAnchor="middle">
             GET
+          </text>
+          <text x="372" y="192" textAnchor="start">
+            admin API
           </text>
         </g>
       </svg>

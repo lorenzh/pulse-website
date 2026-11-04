@@ -57,8 +57,20 @@ function calloutClass(inner: string): string {
   return m ? ` callout-${(m[1] ?? "").toLowerCase()}` : "";
 }
 
+/** True when `text`, trimmed, is exactly one HTML comment (`<!-- ... -->`) and nothing else. */
+export function isOnlyComment(text: string): boolean {
+  const t = text.trim();
+  return (
+    t.length >= 7 &&
+    t.startsWith("<!--") &&
+    t.endsWith("-->") &&
+    t.indexOf("-->", 4) === t.length - 3
+  );
+}
+
 /**
- * Renders GFM to HTML. Raw HTML in the source is escaped, headings get GitHub-style ids,
+ * Renders GFM to HTML. Raw HTML in the source is escaped (a token that is only an HTML comment
+ * is dropped), headings get GitHub-style ids,
  * tables and code sit in focusable scroll regions and links go through `resolve`.
  */
 export function renderMarkdown(
@@ -72,7 +84,7 @@ export function renderMarkdown(
     gfm: true,
     renderer: {
       html({ text }: Tokens.HTML | Tokens.Tag): string {
-        return escapeHtml(text);
+        return isOnlyComment(text) ? "" : escapeHtml(text);
       },
       heading(this: Renderer, { tokens, depth }: Tokens.Heading): string {
         const inner = this.parser.parseInline(tokens);

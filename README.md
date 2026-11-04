@@ -52,7 +52,7 @@ The server render uses real React (`renderToStaticMarkup`); `react` is aliased t
 
 ## How the docs are pinned
 
-`docs.config.json` holds, for each of the six repos (`api`, `probe`, `status`, `notify`, `contract`, `kit`), the repository, a 40-character commit SHA, its commit date and the list of published files (`docs/*.md` and `docs/channels/*.md`). It is the only place with SHAs. The build fetches `https://raw.githubusercontent.com/<repo>/<sha>/<path>`, caches it in `.cache/docs/` (ignored) and fails on a non-200 answer, a bad SHA or an empty file. The README of a repo is not published. A cache file is written to a temp file (`*.tmp`) next to it and renamed into place, so an interrupted build leaves no partial cache hit; a `.tmp` left by a killed build is never read and not cleaned up.
+`docs.config.json` holds, for each of the eight repos (`api`, `probe`, `status`, `notify`, `contract`, `kit`, `console`, `deploy`), the repository, a 40-character commit SHA, its commit date and the list of published files (`docs/*.md` and `docs/channels/*.md`). It is the only place with SHAs. The last sidebar group, "Coming soon" (`src/docs/nav.ts`), lists the real docs of pulse-console and pulse-deploy, tools that are not released yet. The Markdown renderer escapes raw HTML but drops a token that is only one HTML comment (such as `<!-- verify-download:start -->`). The build fetches `https://raw.githubusercontent.com/<repo>/<sha>/<path>`, caches it in `.cache/docs/` (ignored) and fails on a non-200 answer, a bad SHA or an empty file. The README of a repo is not published. A cache file is written to a temp file (`*.tmp`) next to it and renamed into place, so an interrupted build leaves no partial cache hit; a `.tmp` left by a killed build is never read and not cleaned up.
 
 To update: `bun run docs:bump`, review the diff (a new upstream file shows up as a new line), run `bun run check:all`, merge. The build fails on a dangling link anchor and when a published file is not in the navigation (`src/docs/nav.ts`, which maps each sidebar entry to a file). Never edit a generated page by hand; change the source repository.
 
@@ -60,7 +60,7 @@ URLs: `/docs/<repo>/<page>/` (`index.md` is `/docs/<repo>/`), `/docs/notify/chan
 
 ## Product facts
 
-Every fact on the home page is a constant in `src/content/facts.ts` with its source file. `src/content/facts.test.ts` checks them against copies of the pinned files in `test/fixtures/`. When a bump changes a source, refresh the fixture and fix the fact.
+Every fact on the home page is a constant in `src/content/facts.ts` with its source file. `src/content/facts.test.ts` checks them against copies of the pinned files in `test/fixtures/`. When a bump changes a source, refresh the fixture and fix the fact. `test/fixtures/deploy-cli-prompt.ts.txt` (pulse-deploy `cli/prompt.ts`) and `test/fixtures/console-pages.ts.txt` (pulse-console `src/pages.ts`) are byte copies at the `docs.config.json` pins and back `CLI_WIZARD_PROMPTS` and `CONSOLE_SETUP`; their `.txt` suffix keeps them out of `tsc` and ESLint.
 
 ## Hosted page placeholders
 
