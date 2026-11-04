@@ -72,13 +72,13 @@ test("repoForKey accepts only own keys of DOC_REPOS", () => {
       (error: unknown) =>
         error instanceof BumpError &&
         error.message ===
-          `unknown repo "${name}", expected one of api, probe, status, notify, contract, kit`,
+          `unknown repo "${name}", expected one of api, probe, status, notify, contract, kit, console, deploy`,
       name,
     );
   }
 });
 
-test("withRepo keeps a constructor key after the six known keys", () => {
+test("withRepo keeps a constructor key after the eight known keys", () => {
   const entry = {
     repo: "lorenzh/pulse-api",
     sha,
@@ -86,7 +86,10 @@ test("withRepo keeps a constructor key after the six known keys", () => {
     files: ["docs/a.md"],
   };
   const repos = Object.fromEntries(
-    ["api", "probe", "status", "notify", "contract", "kit"].map((k) => [k, entry]),
+    ["api", "probe", "status", "notify", "contract", "kit", "console", "deploy"].map((k) => [
+      k,
+      entry,
+    ]),
   );
   const out = withRepo({ repos }, "constructor", entry);
   assert.deepEqual(Object.keys(out.repos), [
@@ -96,6 +99,23 @@ test("withRepo keeps a constructor key after the six known keys", () => {
     "notify",
     "contract",
     "kit",
+    "console",
+    "deploy",
     "constructor",
   ]);
+});
+
+test("DOC_REPOS lists the eight repositories in sidebar order", () => {
+  assert.deepEqual(Object.keys(DOC_REPOS), [
+    "api",
+    "probe",
+    "status",
+    "notify",
+    "contract",
+    "kit",
+    "console",
+    "deploy",
+  ]);
+  assert.equal(DOC_REPOS.console, "lorenzh/pulse-console");
+  assert.equal(DOC_REPOS.deploy, "lorenzh/pulse-deploy");
 });

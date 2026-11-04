@@ -72,6 +72,18 @@
       "sha": "6a06ec25d26d90be12eba133972b59077dd0e17d",
       "date": "2026-10-30T20:10:19Z",
       "files": ["docs/index.md"]
+    },
+    "console": {
+      "repo": "lorenzh/pulse-console",
+      "sha": "f320e5d59703b654e6cc573b7e7f636598e20624",
+      "date": "2026-11-04T15:17:47Z",
+      "files": ["docs/configuration.md", "docs/development.md", "docs/index.md"]
+    },
+    "deploy": {
+      "repo": "lorenzh/pulse-deploy",
+      "sha": "e3c2eb5db61b9c90973bb51d22d2c09772533187",
+      "date": "2026-11-04T17:14:43Z",
+      "files": ["docs/cli.md"]
     }
   }
 }

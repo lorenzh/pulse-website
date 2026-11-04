@@ -4,9 +4,11 @@ import { readFileSync } from "node:fs";
 import {
   CHANNELS,
   CHECKS_SAMPLE,
+  CLI_WIZARD_PROMPTS,
   CLONE_COMMANDS,
   COMPOSE_COMMANDS,
   COMPOSE_SERVICES,
+  CONSOLE_SETUP,
   ENV_VARS,
   STATUS_PAGE_URL,
 } from "./facts.ts";
@@ -78,5 +80,37 @@ test("the checks.json sample is a copy of checks in the pinned example", () => {
     const pinned = example.checks.find((c) => c.id === check.id);
     assert.ok(pinned, `${check.id} is not in checks.example.json`);
     assert.deepEqual(JSON.parse(JSON.stringify(check)), pinned);
+  }
+});
+
+test("the CLI wizard prompts are the pulse init questions of the pinned deploy cli/prompt.ts", () => {
+  assert.deepEqual(CLI_WIZARD_PROMPTS, [
+    { question: "Setup (minimal, full, demo, dev)", hint: "[full]:" },
+    { question: "Enable the status page?", hint: "[Y/n]" },
+    { question: "Enable notifications (notify)?", hint: "[Y/n]" },
+    { question: "Enable the console?", hint: "[Y/n]" },
+    { question: "Probe location", hint: "[default]:" },
+  ]);
+  const prompt = fixture("deploy-cli-prompt.ts.txt");
+  for (const { question } of CLI_WIZARD_PROMPTS) {
+    assert.ok(prompt.includes(`"${question}"`), `cli/prompt.ts does not contain: ${question}`);
+  }
+  assert.ok(prompt.includes('"Setup (minimal, full, demo, dev)", "full"'));
+  assert.ok(prompt.includes('"Probe location", "default"'));
+});
+
+test("the console setup preview uses the strings of the pinned console src/pages.ts", () => {
+  assert.deepEqual(CONSOLE_SETUP, {
+    title: "Create the owner account",
+    labels: ["pulse-api URL", "Owner email", "Owner name", "Password"],
+    actions: ["Test connection", "Finish setup"],
+  });
+  const pages = fixture("console-pages.ts.txt");
+  assert.ok(pages.includes('"Create the owner account"'));
+  for (const label of CONSOLE_SETUP.labels) {
+    assert.ok(pages.includes(`label: "${label}"`), `src/pages.ts does not contain: ${label}`);
+  }
+  for (const action of CONSOLE_SETUP.actions) {
+    assert.ok(pages.includes(`>${action}</button>`), `src/pages.ts does not contain: ${action}`);
   }
 });

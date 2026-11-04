@@ -1,6 +1,6 @@
 import { test } from "bun:test";
 import assert from "node:assert/strict";
-import { renderMarkdown, truncate } from "./markdown.ts";
+import { isOnlyComment, renderMarkdown, truncate } from "./markdown.ts";
 
 const keep = (href: string) => ({ href, isExternal: href.startsWith("http") });
 
@@ -107,4 +107,32 @@ test("a block in a prototype-chain language renders as plain code", () => {
     assert.ok(html.includes("&lt;b&gt;x&lt;/b&gt;"), name);
     assert.ok(!html.includes("<b>"), name);
   }
+});
+
+test("a token that is only one HTML comment is dropped, anything else is escaped", () => {
+  const cases: [string, boolean][] = [
+    ["<!-- verify-download:start -->", true],
+    ["<!--x-->", true],
+    ["<!-- a --><script>alert(1)</script>", false],
+    ["<!-- a -- > <img src=x onerror=alert(1)>", false],
+    ["<!-- a --> text <!-- b -->", false],
+    ["<!-->", false],
+    ["<b>x</b>", false],
+  ];
+  for (const [input, dropped] of cases) {
+    assert.equal(isOnlyComment(input), dropped, input);
+    const html = renderMarkdown(`# T\n\n${input}\n\nafter\n`, keep).html;
+    assert.ok(!html.includes("<!--"), input);
+    assert.ok(!html.includes("<script"), input);
+    assert.ok(!html.includes("<img"), input);
+    assert.ok(!html.includes("<b>"), input);
+    if (dropped) {
+      assert.equal(html, "<p>after</p>\n", input);
+    } else {
+      assert.ok(html.includes("&lt;"), input);
+    }
+  }
+  assert.ok(
+    renderMarkdown("<!-- a --><script>alert(1)</script>\n", keep).html.includes("&lt;script&gt;"),
+  );
 });

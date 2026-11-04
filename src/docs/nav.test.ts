@@ -2,7 +2,7 @@ import { test } from "bun:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { parseDocsConfig } from "./config.ts";
-import { findEntry, flattenNav, type NavGroup, navProblems, neighbours } from "./nav.ts";
+import { findEntry, flattenNav, NAV, type NavGroup, navProblems, neighbours } from "./nav.ts";
 
 const config = parseDocsConfig(JSON.parse(readFileSync("docs.config.json", "utf8")));
 
@@ -43,4 +43,17 @@ test("previous and next follow the nav order across groups", () => {
 test("findEntry returns the group for the breadcrumb", () => {
   assert.equal(findEntry("api", "docs/rest-api.md")?.group, "Reference");
   assert.equal(findEntry("api", "docs/none.md"), undefined);
+});
+
+test("the last group is Coming soon with the console and deploy pages", () => {
+  assert.deepEqual(NAV.at(-1), {
+    title: "Coming soon",
+    entries: [
+      { label: "Console · in progress", repoKey: "console", file: "docs/index.md" },
+      { label: "Configuration · console", repoKey: "console", file: "docs/configuration.md" },
+      { label: "Development · console", repoKey: "console", file: "docs/development.md" },
+      { label: "pulse CLI · coming soon", repoKey: "deploy", file: "docs/cli.md" },
+    ],
+  });
+  assert.equal(neighbours("console", "docs/index.md").previous?.label, "Development · notify");
 });
