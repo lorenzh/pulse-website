@@ -52,6 +52,10 @@ pulse-website is the static website of pulse: a home page, docs generated from t
 - Links only with `http:`, `https:`, `mailto:` or in-site targets (`src/build/url-safety.ts`).
 - No inline script besides the hashed theme script, no `style` attributes and no `<style>` elements. Every page keeps the Content-Security-Policy meta tag first in `<head>`; a policy change needs a reason in the pull request.
 
+## Code conventions
+
+The pulse [code conventions](https://github.com/lorenzh/pulse-meta/blob/main/docs/code-conventions.md) apply to every change. Search `src/components/`, `src/lib/` and `src/build/` before writing a component or helper, and move the second copy of markup or logic into a shared one. Components and content logic stay small pure functions of their props; I/O stays in `scripts/` and `src/build/`.
+
 ## Tests
 
 - Red, green, refactor. A bug fix starts with a test that reproduces it.
